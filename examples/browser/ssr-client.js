@@ -29,4 +29,8 @@ document.querySelector("#ssr-form").onsubmit = event => {
     error.hidden = true;
   } catch (caught) { error.textContent = caught.message; error.hidden = false; }
 };
+document.querySelector("#ssr-controls").disabled = false;
+document.querySelector("#ssr-patch").disabled = false;
+document.querySelector("#ssr-mock").disabled = false;
+document.querySelector("#ssr-ready").textContent = "연결 완료 · 콘솔 또는 입력창에서 값을 바꿔보세요.";
 window.addEventListener("pagehide", event => { if (!event.persisted) stop(); });
