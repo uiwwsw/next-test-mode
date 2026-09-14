@@ -1,6 +1,6 @@
 {
   "name": "@uiwwsw/test-mode",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Framework-neutral API scenario runtime for development and QA: fetch mocks, response patches, browser controls, and server adapters.",
   "type": "module",
   "packageManager": "npm@11.16.0",

@@ -27,7 +27,7 @@ jobs:
     name: Publish to npm
     needs: verify
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     environment: npm
     permissions:
       contents: read
@@ -84,7 +84,7 @@ jobs:
           import { setTimeout } from 'node:timers/promises';
           const { name, version } = JSON.parse(readFileSync('package.json', 'utf8'));
           const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-          for (let attempt = 1; attempt <= 12; attempt++) {
+          for (let attempt = 1; attempt <= 36; attempt++) {
             try {
               const response = await fetch(`https://registry.npmjs.org/${name}/${version}`, { signal: AbortSignal.timeout(15000) });
               if (!response.ok) throw new Error(`Registry returned HTTP ${response.status}`);
@@ -97,8 +97,8 @@ jobs:
               console.log(`Verified ${name}@${version}: ${published.dist.integrity}`);
               break;
             } catch (error) {
-              if (attempt === 12) throw error;
-              console.log(`Registry verification attempt ${attempt}/12: ${error.message}. Retrying in 10 seconds.`);
+              if (attempt === 36) throw error;
+              console.log(`Registry verification attempt ${attempt}/36: ${error.message}. Retrying in 10 seconds.`);
               await setTimeout(10000);
             }
           }

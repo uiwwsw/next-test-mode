@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1 — 2026-09-14
+
+- Link directly to the public Vercel playground from the README and demo documentation.
+- Allow longer npm registry propagation during post-publication verification, avoiding a failed run after a successful publish.
+
 ## 0.3.0 — 2026-09-14
 
 - Add immediate console response values with `test.mock`, `test.patch`, `test.overrides` and `test.reset`, backed by typed core APIs. Values are detached JSON snapshots and never persisted.

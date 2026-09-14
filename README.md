@@ -15,6 +15,7 @@
 </p>
 
 <p align="center">
+  <a href="https://test-mode-tau.vercel.app/">Live demo ↗</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#see-it-in-action">Demo</a> ·
   <a href="https://github.com/uiwwsw/test-mode/blob/main/docs/guide.md">사용 가이드</a> ·
@@ -32,6 +33,8 @@
 | 빈 목록 · HTTP 오류 · 특정 계정 상태 | 실제 상품 + 테스트 할인 · 재고 변경 | `cart.empty` · `auth.login.locked` |
 
 ## See it in action
+
+**[라이브 데모 열기 →](https://test-mode-tau.vercel.app/)** 로그인이나 설치 없이 콘솔·JSON 입력으로 직접 바꿔보세요.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/uiwwsw/test-mode/v0.3.0/docs/assets/scenarios.gif" width="880" alt="실제 실행 데모: JSON 입력으로 가격을 변경하고, 직접 만든 상품을 mock하고, HTTP 오류를 적용한 뒤 원래 응답으로 복귀합니다." />
