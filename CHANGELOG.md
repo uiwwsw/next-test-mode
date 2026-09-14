@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 — 2026-09-14
+
+- Keep existing browser and server `fetch()` call sites: one-call browser setup, a Node request wrapper, and a Next.js 16 Node instrumentation adapter.
+- Add `npx @uiwwsw/test-mode init --next` to generate first-time setup, detect src/TypeScript projects, and preserve existing instrumentation files.
+- Opt in to SSR JSON synchronization: Console `mock` / `patch` values survive reloads and refresh server-rendered HTML automatically. Session cookies are limited to 3,500 encoded bytes; rejected changes preserve working state.
+- Isolate server state and counters per request. Keep overrides outside Next fetch caching and avoid browser hydration attribute changes.
+- Add a public interactive SSR demo, raw-HTML and concurrent-visitor regressions, plus a real Next.js app installation test in CI.
+- Preserve low-level APIs and the default memory-only lifetime of browser JSON overrides. Explain automatic setup, lifecycle, framework support and cache boundaries in the README and guides.
+
 ## 0.4.1 — 2026-09-14
 
 - Lead the README, npm presentation and live demo with three benefits: unchanged browser fetch call sites after bootstrap setup, isolated reusable scenario files, and immediate console data experiments.

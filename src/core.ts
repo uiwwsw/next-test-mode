@@ -362,6 +362,7 @@ export class TestMode {
   readonly storageKey: string;
 
   private readonly enabled: boolean | (() => boolean);
+  private readonly beforeChange: TestModeOptions["beforeChange"];
   private readonly logger: false | TestModeLogger | undefined;
   private definitions: RuntimeDefinition[];
   private storiesCatalog: StoryDefinition[];
@@ -373,6 +374,7 @@ export class TestMode {
   private memoryOnly = false;
 
   constructor({
+    beforeChange,
     cookieKey,
     definitions = [],
     enabled = defaultEnabled,
@@ -383,6 +385,7 @@ export class TestMode {
     storageKey = DEFAULT_STORAGE_KEY,
   }: TestModeOptions = {}) {
     this.cookieKey = cookieKey ?? storageKey;
+    this.beforeChange = beforeChange;
     this.enabled = enabled;
     this.eventName = eventName;
     this.logger = logger;
@@ -438,7 +441,10 @@ export class TestMode {
     options: ResponseOverrideOptions = {},
   ) => {
     if (!this.isAvailable()) return [];
-    const result = this.responseOverrides.set(path, data, "mock", options);
+    const next = this.responseOverrides.clone();
+    const result = next.set(path, data, "mock", options);
+    this.validateChange(this.read(), next);
+    this.responseOverrides = next;
     this.notify();
     return result;
   };
@@ -450,7 +456,10 @@ export class TestMode {
     options: Pick<ResponseOverrideOptions, "method"> = {},
   ) => {
     if (!this.isAvailable()) return [];
-    const result = this.responseOverrides.set(path, fields, "patch", options);
+    const next = this.responseOverrides.clone();
+    const result = next.set(path, fields, "patch", options);
+    this.validateChange(this.read(), next);
+    this.responseOverrides = next;
     this.notify();
     return result;
   };
@@ -461,7 +470,10 @@ export class TestMode {
     path?: string,
     options: Pick<ResponseOverrideOptions, "method"> = {},
   ) => {
-    const result = this.responseOverrides.clear(path, options.method);
+    const next = this.responseOverrides.clone();
+    const result = next.clear(path, options.method);
+    this.validateChange(this.read(), next);
+    this.responseOverrides = next;
     this.notify();
     return result;
   };
@@ -641,10 +653,7 @@ export class TestMode {
     return this.read().includes(key) ? this.remove(key) : this.add(key);
   };
 
-  clear = () => {
-    this.responseOverrides.clear();
-    return this.write([]);
-  };
+  clear = () => this.write([], new ResponseOverrides());
 
   subscribe = (listener: (paths: string[]) => void) => {
     this.listeners.add(listener);
@@ -823,10 +832,17 @@ export class TestMode {
     return [...this.memoryPaths];
   };
 
-  private write = (paths: readonly string[]) => {
-    if (!this.isAvailable()) return [];
-    const normalizedPaths = this.normalizeActivePaths(paths);
+  private validateChange = (paths: readonly string[], overrides: ResponseOverrides) =>
+    this.beforeChange?.({ entries: [...paths], overrides: overrides.list() });
 
+  private write = (paths: readonly string[], overrides = this.responseOverrides) => {
+    if (!this.isAvailable()) {
+      this.responseOverrides = overrides;
+      return [];
+    }
+    const normalizedPaths = this.normalizeActivePaths(paths);
+    this.validateChange(normalizedPaths, overrides);
+    this.responseOverrides = overrides;
     this.memoryPaths = normalizedPaths;
 
     if (typeof window !== "undefined") {

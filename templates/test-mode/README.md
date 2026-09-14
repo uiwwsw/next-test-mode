@@ -63,3 +63,5 @@ Use your own build/environment condition in other apps. A browser without a
 `process` global is disabled by default. Install once, retain the returned cleanup
 function and invoke it on teardown or HMR disposal. Selecting a scenario does not
 refetch application data; trigger the affected request or reload the page.
+
+Next.js에서 직접 JSON과 SSR까지 바로 연결하려면 `npx @uiwwsw/test-mode init --next`로 시작하세요. 이 템플릿은 API별 정의와 공유 시나리오를 앱 소유 폴더에 남기는 예제입니다. 두 설치 방식을 중복 실행하지 말고, 기존 설치의 옵션에 카탈로그를 등록하세요. [자동 SSR 연결 가이드](https://github.com/uiwwsw/test-mode/blob/main/docs/server-rendering.md).

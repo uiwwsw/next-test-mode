@@ -181,6 +181,8 @@ export type ToggleExtensionOptions = Readonly<{
 }>;
 
 export type TestModeOptions = Readonly<{
+  /** Validate or synchronize a detached state snapshot before a local change commits. Throw to reject it. */
+  beforeChange?: (state: TestModeState) => void;
   cookieKey?: string;
   definitions?: readonly RegisteredMockDefinition[];
   enabled?: boolean | (() => boolean);
@@ -192,7 +194,8 @@ export type TestModeOptions = Readonly<{
 }>;
 
 export type TestModeOverlayOptions = Readonly<{
-  datasetName?: string;
+  /** Set false when installing before React hydration to avoid changing app-owned attributes. */
+  datasetName?: string | false;
   document?: Document;
   extensions?: readonly TestModeExtension[];
   globalName?: string;
@@ -229,4 +232,9 @@ export type ResponseOverride = Readonly<{
   data: unknown;
   status?: number;
   statusText?: string;
+}>;
+
+export type TestModeState = Readonly<{
+  entries: readonly string[];
+  overrides: readonly ResponseOverride[];
 }>;

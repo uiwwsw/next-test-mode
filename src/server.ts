@@ -1,6 +1,7 @@
 import { createTestMode } from "./core.js";
 import { createMockFetch } from "./fetch.js";
 import type { TestModeOptions } from "./types.js";
+import { readSSRState, ssrCookieKey } from "./internal/ssr-state.js";
 
 export type ServerTestModeOptions = TestModeOptions &
   Readonly<{
@@ -8,6 +9,8 @@ export type ServerTestModeOptions = TestModeOptions &
     cookieHeader: string | null;
     /** The server/framework fetch to wrap; its request arguments are preserved. */
     originalFetch?: typeof fetch;
+    /** Accept JSON synchronized by setupTestMode({ ssr: true }). Disabled by default. */
+    ssr?: boolean;
   }>;
 
 /**
@@ -19,6 +22,7 @@ export type ServerTestModeOptions = TestModeOptions &
 export const createServerTestMode = ({
   cookieHeader,
   originalFetch = globalThis.fetch.bind(globalThis),
+  ssr = false,
   ...options
 }: ServerTestModeOptions) => {
   if (typeof window !== "undefined") {
@@ -29,6 +33,16 @@ export const createServerTestMode = ({
   const runtime = createTestMode(options);
   // An absent incoming cookie must not fall back to any other selection source.
   runtime.set(runtime.active(cookieHeader ?? ""));
+  if (ssr && runtime.isAvailable()) {
+    const state = readSSRState(cookieHeader ?? "", ssrCookieKey(runtime.cookieKey));
+    if (state) {
+      runtime.set(state.entries);
+      for (const item of state.overrides) {
+        if (item.mode === "mock") runtime.setMock(item.path, item.data, item);
+        else runtime.setPatch(item.path, item.data as Record<string, unknown>, item);
+      }
+    }
+  }
   return {
     runtime,
     // Selection is already captured above. An upstream authentication Cookie

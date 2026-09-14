@@ -4,11 +4,12 @@
 npm ci
 npm run ci                  # 타입, 런타임 회귀 테스트, 실제 tarball 설치 검증
 npx playwright install chromium
+npm run test:next            # 실제 Next.js 앱에 tarball/CLI 설치 및 자동 SSR 검증
 npm run test:browser        # 실제 Chromium에서 콘솔·fetch·overlay 검증
 npm pack                    # dist를 새로 빌드하고 설치 가능한 tgz 생성
 ```
 
-GitHub Actions는 PR과 main에서 Node.js 18.17 / 20 / 22 / 24 및 Chromium을 검증합니다. 패키지 검사에는 외부 소비자 프로젝트에서의 ESM import, 타입이 있는 handler, 복사한 스타터의 TypeScript 컴파일이 포함됩니다.
+GitHub Actions는 PR과 main에서 Node.js 18.17 / 20 / 22 / 24 및 Chromium·Next.js 16.3.5 자동 SSR 연결을 검증합니다. 패키지 검사에는 외부 소비자 프로젝트에서의 ESM import, 타입이 있는 handler, 복사한 스타터의 TypeScript 컴파일이 포함됩니다.
 
 배포는 **GitHub Release 발행** 또는 **Publish 워크플로의 기존 tag 지정 실행**으로 시작됩니다. 저장소 secret `NPM_TOKEN`을 사용하며, 발행 권한과 CI에서의 비대화형 발행 권한이 있어야 합니다. 토큰은 publish 단계에만 전달합니다.
 
@@ -28,6 +29,6 @@ GitHub Actions는 PR과 main에서 Node.js 18.17 / 20 / 22 / 24 및 Chromium을 
 
 ## Vercel 데모
 
-공개 주소: [test-mode-tau.vercel.app](https://test-mode-tau.vercel.app/)
+공개 주소: [CSR 데모](https://test-mode-tau.vercel.app/) · [SSR 데모](https://test-mode-tau.vercel.app/api/ssr)
 
-Vercel에서 이 GitHub 저장소를 Import하고 Root Directory를 `./`로 둡니다. `vercel.json`에 Other 프레임워크, `npm run build:demo`, `demo-dist` 출력이 지정되어 있습니다. 데모에는 환경 변수가 필요하지 않습니다. 연결 후 main 변경이 데모의 자동 배포를 시작합니다. npm 패키지 발행은 기존 GitHub Release / NPM_TOKEN 절차를 그대로 사용합니다.
+Vercel에서 이 GitHub 저장소를 Import하고 Root Directory를 `./`로 둡니다. `vercel.json`에 Other 프레임워크, `npm run build:demo`, `demo-dist` 출력이 지정되어 있습니다. CSR 정적 파일과 `api/ssr.mjs` Node 함수를 함께 배포합니다. SSR 함수가 사용하는 `dist`도 같은 빌드에서 생성됩니다. 데모에는 환경 변수가 필요하지 않습니다. 연결 후 main 변경이 데모의 자동 배포를 시작합니다. npm 패키지 발행은 기존 GitHub Release / NPM_TOKEN 절차를 그대로 사용합니다.

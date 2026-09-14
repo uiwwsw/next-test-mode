@@ -1,7 +1,7 @@
 {
   "name": "@uiwwsw/test-mode",
-  "version": "0.4.1",
-  "description": "Keep browser fetch calls unchanged, isolate reusable test scenarios in your own folder, and try API response data from the console.",
+  "version": "0.5.0",
+  "description": "Keep fetch calls unchanged, keep test data separate, and change browser or SSR responses from DevTools Console.",
   "type": "module",
   "packageManager": "npm@11.16.0",
   "license": "MIT",
@@ -9,6 +9,7 @@
   "sideEffects": false,
   "files": [
     "dist",
+    "bin",
     "src",
     "docs/*.md",
     "templates/test-mode",
@@ -36,6 +37,18 @@
     "./server": {
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js"
+    },
+    "./setup": {
+      "types": "./dist/setup.d.ts",
+      "import": "./dist/setup.js"
+    },
+    "./next": {
+      "types": "./dist/next.d.ts",
+      "import": "./dist/next.js"
     }
   },
   "main": "./dist/index.js",
@@ -55,7 +68,8 @@
     "dev:example": "npm run build && node scripts/serve-example.mjs",
     "docs:assets": "npm run build && node scripts/render-doc-assets.mjs",
     "build:demo": "npm run build && node scripts/build-demo.mjs",
-    "dev:ssr": "npm run build && node examples/server/server.mjs"
+    "dev:ssr": "npm run build && node examples/server/server.mjs",
+    "test:next": "npm run build && node scripts/check-next.mjs"
   },
   "keywords": [
     "api-mocking",
@@ -88,6 +102,18 @@
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
+    "@types/node": "18.19.130",
     "typescript": "5.9.3"
+  },
+  "peerDependencies": {
+    "next": ">=16 <17"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    }
+  },
+  "bin": {
+    "test-mode": "./bin/test-mode.mjs"
   }
 }

@@ -4,6 +4,8 @@ import { resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServerTestMode } from "../../dist/server.js";
 import { catalog } from "./scenarios.mjs";
+import { withTestMode } from "../../dist/node.js";
+import { renderAutomaticPage } from "./automatic-page.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const dist = resolve(root, "dist");
@@ -26,14 +28,25 @@ const escapeHtml = (value) =>
 
 // Local runnable example; the public Vercel playground remains a static CSR demo.
 export const createSSRDemoServer = () => {
-  const server = createServer(async (request, response) => {
+  const handler = withTestMode(async (request, response) => {
     response.setHeader("Cache-Control", "private, no-store");
     response.setHeader("X-Content-Type-Options", "nosniff");
     try {
       const pathname = new URL(request.url, "http://localhost").pathname;
-      if (pathname === "/api/cart") {
+      if (pathname === "/api/cart" || pathname === "/api/cart.json") {
         response.setHeader("Content-Type", "application/json");
         response.end(JSON.stringify(upstream));
+        return;
+      }
+      if (pathname === "/ssr-client.js") {
+        response.setHeader("Content-Type", "text/javascript");
+        response.end(await readFile(resolve(root, "examples/browser/ssr-client.js")));
+        return;
+      }
+      if (pathname === "/auto") {
+        const upstream = await fetch(`http://127.0.0.1:${server.address().port}/api/cart.json`);
+        response.setHeader("Content-Type", "text/html; charset=utf-8");
+        response.end(renderAutomaticPage(await upstream.json(), upstream.status));
         return;
       }
       if (
@@ -91,7 +104,9 @@ SSR은 공유된 시나리오 선택 쿠키를 다음 요청에서 읽습니다.
         .writeHead(error.code === "ENOENT" ? 404 : 500)
         .end("Example request failed");
     }
-  });
+  }, { enabled: request => new URL(request.url, "http://localhost").pathname === "/auto", allowedPaths: ["/api/cart.json"] });
+  const server = createServer(handler);
+  server.once("close", handler.dispose);
   return server;
 };
 
@@ -101,6 +116,6 @@ if (
 ) {
   const port = Number(process.env.PORT ?? 4176);
   createSSRDemoServer().listen(port, "127.0.0.1", () => {
-    console.log(`SSR example: http://127.0.0.1:${port}`);
+    console.log(`SSR example: http://127.0.0.1:${port}/auto`);
   });
 }
