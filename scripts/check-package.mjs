@@ -133,6 +133,11 @@ try {
     const mock = defineMock<{ name: string }, { greeting: string }>('/hello', ({ body }) => ({ greeting: body?.name ?? 'world' }));
     const patch = definePatch<unknown, { total: number }>('/total', (data) => ({ total: data.total + 1 }));
     const runtime = createTestMode({ enabled: true, definitions: [mock], patchDefinitions: [patch] });
+    runtime.setMock('/cart', { items: [] }, { status: 200 });
+    runtime.setPatch('/cart', { total: 9.99 }, { method: 'GET' });
+    const overrides: readonly import('@uiwwsw/test-mode/core').ResponseOverride[] = runtime.overrides();
+    runtime.resetOverrides('/cart', { method: 'GET' });
+    void overrides;
     const wrapped: typeof fetch = createMockFetch(runtime);
     const core: typeof import('@uiwwsw/test-mode').createTestMode = (await import('@uiwwsw/test-mode/core')).createTestMode;
     const adapter: typeof createMockFetch = (await import('@uiwwsw/test-mode/fetch')).createMockFetch;

@@ -89,7 +89,11 @@ const responseFromMock = (result: MockResult, method: string) => {
   const headers = new Headers(result.headers);
   let body: BodyInit | null = null;
   if (method !== "HEAD" && !BODYLESS_STATUSES.has(result.status)) {
-    if (isBodyInit(result.data)) {
+    if (result.bodyFormat === "json") {
+      body = JSON.stringify(result.data);
+      if (!headers.has("content-type"))
+        headers.set("content-type", "application/json");
+    } else if (isBodyInit(result.data)) {
       body = result.data;
     } else if (result.data !== undefined) {
       body = JSON.stringify(result.data);

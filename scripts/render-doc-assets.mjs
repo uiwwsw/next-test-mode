@@ -1,4 +1,4 @@
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import { spawn, execFileSync } from "node:child_process";
 import { mkdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -35,31 +35,39 @@ try {
   });
   await hero.close();
   const page = await browser.newPage({
-    viewport: { width: 1080, height: 840 },
+    viewport: { width: 1200, height: 1000 },
     deviceScaleFactor: 1,
   });
   await page.goto("http://127.0.0.1:4174/");
-  const modes = ["real", "empty", "error", "patch"];
-  for (const mode of modes) {
-    await page
-      .getByRole("button", {
-        name: {
-          real: "Real API",
-          empty: "Empty",
-          error: "Error",
-          patch: "Patch",
-        }[mode],
-        exact: true,
-      })
-      .click();
-    await page.waitForFunction(
-      (mode) => document.body.dataset.ready === mode,
-      mode,
+  await expect(page.locator("#cart")).toContainText("$42.00");
+  const capture = (name) =>
+    page.screenshot({ path: resolve(frames, `${name}.png`) });
+  await capture("real");
+  await page.getByRole("button", { name: "적용하고 테스트 모드 켜기" }).click();
+  await expect(page.locator("#cart")).toContainText("$9.99");
+  await capture("patch");
+  await page.screenshot({ path: resolve(output, "playground.png") });
+  await page.getByRole("button", { name: "Mock 응답 전체 교체" }).click();
+  await page
+    .getByLabel("응답에 적용할 JSON")
+    .fill(
+      '{\n  "items": [{"name": "내가 만든 상품", "price": 3.14}],\n  "total": 3.14\n}',
     );
-    await page.screenshot({ path: resolve(frames, `${mode}.png`) });
-    if (mode === "patch")
-      await page.screenshot({ path: resolve(output, "playground.png") });
-  }
+  await page.getByRole("button", { name: "적용하고 테스트 모드 켜기" }).click();
+  await expect(page.locator("#cart")).toContainText("$3.14");
+  await capture("custom");
+  await page
+    .getByLabel("응답에 적용할 JSON")
+    .fill('{\n  "message": "직접 입력한 오류 메시지"\n}');
+  await page.locator("#mock-status").fill("503");
+  await page.getByRole("button", { name: "적용하고 테스트 모드 켜기" }).click();
+  await expect(page.locator("#http-status")).toHaveText(
+    "503 Service Unavailable",
+  );
+  await capture("error");
+  await page.getByRole("button", { name: "원래 응답", exact: true }).click();
+  await expect(page.locator("#cart")).toContainText("$42.00");
+  await capture("reset");
   execFileSync(
     "python3",
     [
@@ -68,8 +76,8 @@ try {
 from PIL import Image
 from pathlib import Path
 import sys
-frames = [Image.open(Path(sys.argv[1]) / (name + '.png')).convert('RGB') for name in ['real', 'empty', 'error', 'patch']]
-frames[0].save(sys.argv[2], save_all=True, append_images=frames[1:], duration=[2300,2300,2300,3000], loop=0, optimize=True)
+frames = [Image.open(Path(sys.argv[1]) / (name + '.png')).convert('RGB') for name in ['real', 'patch', 'custom', 'error', 'reset']]
+frames[0].save(sys.argv[2], save_all=True, append_images=frames[1:], duration=[1800,3000,3000,2600,1800], loop=0, optimize=True)
 `,
       frames,
       resolve(output, "scenarios.gif"),

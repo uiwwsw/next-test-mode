@@ -22,6 +22,7 @@ import type {
   TestModeSearchInput,
   TestModeSearchResult,
   TestModeOptions,
+  ResponseOverrideOptions,
 } from "./types.js";
 import { MOCK_RESULT, MOCK_PASS_THROUGH } from "./internal/symbols.js";
 import { normalizePath, parseInputList } from "./internal/paths.js";
@@ -32,6 +33,8 @@ import {
   readBrowserStorage,
   writeBrowserStorage,
 } from "./internal/storage.js";
+
+import { ResponseOverrides } from "./internal/overrides.js";
 
 export { normalizePath } from "./internal/paths.js";
 export type * from "./types.js";
@@ -363,6 +366,7 @@ export class TestMode {
   private definitions: RuntimeDefinition[];
   private storiesCatalog: StoryDefinition[];
   private memoryPaths: string[] = [];
+  private responseOverrides = new ResponseOverrides();
   private listeners = new Set<(paths: string[]) => void>();
   private readonly requestCounts = new Map<string, number>();
   private dispatchingChange = false;
@@ -427,9 +431,46 @@ export class TestMode {
     this.notify();
   };
 
+  /** Replace one response immediately, without registering a feature or story. */
+  setMock = (
+    path: string,
+    data: unknown,
+    options: ResponseOverrideOptions = {},
+  ) => {
+    if (!this.isAvailable()) return [];
+    const result = this.responseOverrides.set(path, data, "mock", options);
+    this.notify();
+    return result;
+  };
+
+  /** Shallow-merge JSON fields into the real response. Nested values are replaced. */
+  setPatch = (
+    path: string,
+    fields: Readonly<Record<string, unknown>>,
+    options: Pick<ResponseOverrideOptions, "method"> = {},
+  ) => {
+    if (!this.isAvailable()) return [];
+    const result = this.responseOverrides.set(path, fields, "patch", options);
+    this.notify();
+    return result;
+  };
+
+  overrides = () => (this.isAvailable() ? this.responseOverrides.list() : []);
+
+  resetOverrides = (
+    path?: string,
+    options: Pick<ResponseOverrideOptions, "method"> = {},
+  ) => {
+    const result = this.responseOverrides.clear(path, options.method);
+    this.notify();
+    return result;
+  };
+
   active = (cookieHeader?: string | null) => this.read(cookieHeader);
 
   isActiveForPage = (page: string, cookieHeader?: string | null) => {
+    if (typeof cookieHeader !== "string" && this.overrides().length > 0)
+      return true;
     const activeKeys = new Set(this.read(cookieHeader));
     const activeDefinitions = this.definitions.filter((definition) =>
       activeKeys.has(definition.key),
@@ -600,7 +641,10 @@ export class TestMode {
     return this.read().includes(key) ? this.remove(key) : this.add(key);
   };
 
-  clear = () => this.write([]);
+  clear = () => {
+    this.responseOverrides.clear();
+    return this.write([]);
+  };
 
   subscribe = (listener: (paths: string[]) => void) => {
     this.listeners.add(listener);
@@ -894,6 +938,41 @@ export class TestMode {
 
     const normalizedMethod = request.method.toUpperCase();
     const normalizedPath = normalizePath(request.path);
+    // Explicit cookie input is server/request-scoped; never apply a local experiment to it.
+    const override =
+      typeof request.cookieHeader === "string"
+        ? undefined
+        : this.responseOverrides.find(normalizedPath, normalizedMethod);
+    if (override) {
+      if (override.mode !== mode) return null;
+      const handler: MockHandler | PatchHandler =
+        mode === "mock"
+          ? () =>
+              httpResult({
+                data: override.data,
+                bodyFormat: "json",
+                status: override.status!,
+                statusText: override.statusText!,
+              })
+          : (data: unknown) => {
+              if (
+                data === null ||
+                typeof data !== "object" ||
+                Array.isArray(data)
+              )
+                throw new TypeError(
+                  "Cannot apply an object patch to a non-object response. Use a mock to replace it.",
+                );
+              return { ...data, ...(override.data as Record<string, unknown>) };
+            };
+      return {
+        key: `override:${normalizedMethod}:${normalizedPath}`,
+        path: normalizedPath,
+        mode,
+        pages: [],
+        handler,
+      } satisfies RuntimeDefinition;
+    }
 
     for (const key of this.read(request.cookieHeader)) {
       const definition = this.definitions.find(

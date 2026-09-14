@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 — 2026-09-14
+
+- Add immediate console response values with `test.mock`, `test.patch`, `test.overrides` and `test.reset`, backed by typed core APIs. Values are detached JSON snapshots and never persisted.
+- Give temporary responses explicit path/method precedence, transactional input validation, mock HTTP status control and cookie-scoped server isolation.
+- Rebuild the demo around DevTools commands and a real JSON editor, automatic request refresh, HTTP/response inspection, request counts, error handling and reset.
+- Add a static sample API, portable demo build, and root Vercel configuration for Git import without secrets or server functions.
+- Verify custom values, JSON errors, rapid edits, keyboard/copy flow and mobile/nested-path hosting.
+
 ## 0.2.0 — 2026-09-09
 
 - Redesign the README and npm presentation with a custom banner, an actual four-state demo, concise onboarding and dedicated usage/release guides.

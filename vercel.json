@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "npm run build:demo",
+  "outputDirectory": "demo-dist",
+  "installCommand": "npm ci",
+  "headers": [
+    {
+      "source": "/api/cart.json",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [{ "key": "X-Content-Type-Options", "value": "nosniff" }]
+    }
+  ]
+}
