@@ -1,6 +1,6 @@
 ﻿# Story-Based Test Mode Design
 
-`@uiwwsw/test-mode` supports two testing perspectives without mixing their responsibilities.
+`@uiwwsw/next-test-mode` supports two testing perspectives without mixing their responsibilities.
 
 - `test.feat`: feature-level API mock/patch testing for developers.
 - `test.story`: user-facing scenario testing for QA, product, design, and frontend sharing.
@@ -131,7 +131,7 @@ Applications should separate feature entries from story combinations.
 The package ships a starter folder at:
 
 ```txt
-node_modules/@uiwwsw/test-mode/templates/test-mode/
+node_modules/@uiwwsw/next-test-mode/templates/test-mode/
 ```
 
 ```txt

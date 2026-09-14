@@ -1,8 +1,10 @@
 # 사용 가이드
 
-설치와 첫 실행은 [README](https://github.com/uiwwsw/test-mode#readme)를 참고하세요.
+> **Next.js App Router:** 먼저 `npm install @uiwwsw/next-test-mode`와 `npx @uiwwsw/next-test-mode init`을 실행하세요. 생성된 `/client` 연결이 Console·Draft Mode·자동 새로고침을 처리합니다. 아래 범용 설치 예제를 중복 설치하지 마세요. SSR·SSG·ISR 지원 범위는 [Next 연결 가이드](./server-rendering.md), 기존 패키지 이전은 [migration](./migration.md)을 확인하세요.
 
-test mode는 **API 응답을 바꾸는 UI 디버깅 도구**입니다. `setupTestMode()`로 브라우저에 한 번 연결합니다. Next.js는 `npx @uiwwsw/test-mode init --next`, Node는 `withTestMode()`로 서버도 연결하면 직접 입력한 JSON을 SSR에 전달하고 자동 새로고침합니다. [CSR / SSR 지원 범위와 연결 예제](./server-rendering.md).
+설치와 첫 실행은 [README](https://github.com/uiwwsw/next-test-mode#readme)를 참고하세요.
+
+Next Test Mode는 **API 응답을 바꾸는 UI 디버깅 도구**입니다. `setupTestMode()`로 브라우저에 한 번 연결합니다. Next.js는 `npx @uiwwsw/next-test-mode init`, Node는 `withTestMode()`로 서버도 연결하면 직접 입력한 JSON을 SSR에 전달하고 자동 새로고침합니다. [CSR / SSR 지원 범위와 연결 예제](./server-rendering.md).
 
 ## 직접 응답 값 넣기
 
@@ -31,7 +33,7 @@ TypeScript나 서버 어댑터에서는 같은 기능을 `runtime.setMock()`, `r
 ## Mock, Patch, 요청 데이터
 
 ```ts
-import { defineMock, definePatch, httpResult, passThrough } from '@uiwwsw/test-mode';
+import { defineMock, definePatch, httpResult, passThrough } from '@uiwwsw/next-test-mode';
 
 // HTTP 오류 응답. 오류를 throw하는 것과 달리 fetch 자체는 resolve됩니다.
 const locked = defineMock('/api/login', () => httpResult({
@@ -126,7 +128,7 @@ story는 고유한 `key`, `title`, `description`, 등록된 `entries`가 필요�
 스타터를 복사한 뒤 `config.ts`의 `enabled`를 앱 환경에 맞게 설정하세요. 이 폴더는 패키지 내부가 아니라 여러분의 앱 코드이므로 필요한 데이터와 시나리오를 직접 수정하고 코드 리뷰할 수 있습니다.
 
 ```bash
-cp -R node_modules/@uiwwsw/test-mode/templates/test-mode src/test-mode
+cp -R node_modules/@uiwwsw/next-test-mode/templates/test-mode src/test-mode
 ```
 
 ```text
@@ -144,7 +146,7 @@ React/Next.js의 effect에서는 `return installAppTestMode()`로 정리 함수�
 
 ## 서버 / axios 어댑터
 
-Next.js는 `init --next`, 일반 Node는 `withTestMode(handler)`로 시작 지점에 한 번 연결하면 fetch 호출부를 유지합니다. 필요한 조회만 수동 연결할 때는 요청마다 `createServerTestMode({ cookieHeader, ssr: true, ...options })`를 생성하세요. 반환된 `runtime`과 `fetch`는 그 요청 전용입니다. [서버 렌더링 가이드](./server-rendering.md)에서 공유 시나리오·Next.js·캐시 조건을 확인하세요.
+Next.js는 `init`, 일반 Node는 `withTestMode(handler)`로 시작 지점에 한 번 연결하면 fetch 호출부를 유지합니다. 필요한 조회만 수동 연결할 때는 요청마다 `createServerTestMode({ cookieHeader, ssr: true, ...options })`를 생성하세요. 반환된 `runtime`과 `fetch`는 그 요청 전용입니다. [서버 렌더링 가이드](./server-rendering.md)에서 공유 시나리오·Next.js·캐시 조건을 확인하세요.
 
 서버나 fetch를 사용하지 않는 API 클라이언트는 `runtime.resolve(request)`와 `runtime.applyPatch({ ...request, data })`로 연결할 수 있습니다.
 

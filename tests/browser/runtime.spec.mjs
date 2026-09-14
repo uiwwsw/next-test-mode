@@ -488,43 +488,197 @@ test("removing browser storage does not resurrect the cookie selection in anothe
   expect(await page.evaluate(() => changes)).toEqual([[]]);
 });
 
-test("one-call setup stays memory-only by default and cleanup cancels refresh", async ({ page }) => {
+test("one-call setup stays memory-only by default and cleanup cancels refresh", async ({
+  page,
+}) => {
   const result = await page.evaluate(async () => {
     const original = window.fetch;
     let refreshes = 0;
-    const { runtime, stop } = api.setupTestMode({ enabled: true, refresh: () => { refreshes++; } });
-    test.mock('/api/cart', { total: 7 });
-    const response = await (await fetch('/api/cart')).json();
+    const { runtime, stop } = api.setupTestMode({
+      enabled: true,
+      refresh: () => {
+        refreshes++;
+      },
+    });
+    test.mock("/api/cart", { total: 7 });
+    const response = await (await fetch("/api/cart")).json();
     const cookie = document.cookie;
     stop();
     stop();
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return { response, cookie, refreshes, restored: window.fetch === original, consoleRemoved: window.test === undefined, overrides: runtime.overrides().length };
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    return {
+      response,
+      cookie,
+      refreshes,
+      restored: window.fetch === original,
+      consoleRemoved: window.test === undefined,
+      overrides: runtime.overrides().length,
+    };
   });
-  expect(result).toMatchObject({ response: { total: 7 }, refreshes: 0, restored: true, consoleRemoved: true, overrides: 1 });
-  expect(result.cookie).not.toContain('.ssr=');
+  expect(result).toMatchObject({
+    response: { total: 7 },
+    refreshes: 0,
+    restored: true,
+    consoleRemoved: true,
+    overrides: 1,
+  });
+  expect(result.cookie).not.toContain(".ssr=");
 });
 
-test("SSR setup rejects unavailable cookies before installing any globals", async ({ page }) => {
+test("SSR setup rejects unavailable cookies before installing any globals", async ({
+  page,
+}) => {
   const result = await page.evaluate(() => {
     const original = window.fetch;
-    Object.defineProperty(document, 'cookie', { configurable: true, get: () => '', set: () => {} });
+    Object.defineProperty(document, "cookie", {
+      configurable: true,
+      get: () => "",
+      set: () => {},
+    });
     let message;
-    try { api.setupTestMode({ enabled: true, ssr: true }); } catch (error) { message = error.message; }
+    try {
+      api.setupTestMode({ enabled: true, ssr: true });
+    } catch (error) {
+      message = error.message;
+    }
     delete document.cookie;
-    return { message, restored: window.fetch === original, consoleRemoved: window.test === undefined };
+    return {
+      message,
+      restored: window.fetch === original,
+      consoleRemoved: window.test === undefined,
+    };
   });
   expect(result.message).toMatch(/cookie/i);
   expect(result).toMatchObject({ restored: true, consoleRemoved: true });
 });
 
-test("disabled setup never touches cookie, fetch or Console even with SSR requested", async ({ page }) => {
+test("disabled setup never touches cookie, fetch or Console even with SSR requested", async ({
+  page,
+}) => {
   const result = await page.evaluate(() => {
     const original = window.fetch;
     const cookie = document.cookie;
     const installation = api.setupTestMode({ enabled: false, ssr: true });
     installation.stop();
-    return { sameFetch: window.fetch === original, sameCookie: cookie === document.cookie, consoleRemoved: window.test === undefined };
+    return {
+      sameFetch: window.fetch === original,
+      sameCookie: cookie === document.cookie,
+      consoleRemoved: window.test === undefined,
+    };
   });
-  expect(result).toEqual({ sameFetch: true, sameCookie: true, consoleRemoved: true });
+  expect(result).toEqual({
+    sameFetch: true,
+    sameCookie: true,
+    consoleRemoved: true,
+  });
+});
+
+test("Next client uses the original transport for Draft control and refreshes after acknowledgement", async ({
+  page,
+}) => {
+  const calls = [];
+  let active = false;
+  await page.route("**/api/next-test-mode", (route) => {
+    const { enabled } = route.request().postDataJSON();
+    const changed = active !== enabled;
+    active = enabled;
+    calls.push(enabled);
+    return route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ enabled, changed }),
+    });
+  });
+  await page.evaluate(async () => {
+    const { setupNextTestModeClient } = await import("/client.js");
+    window.refreshes = 0;
+    window.controller = setupNextTestModeClient({
+      enabled: true,
+      refresh: () => {
+        window.refreshes++;
+      },
+    });
+    await controller.ready;
+    // The internal control call must never be intercepted by a Console override.
+    controller.runtime.setMock(
+      "/api/next-test-mode",
+      { enabled: false, changed: false },
+      { method: "POST" },
+    );
+    controller.runtime.setPatch("/api/cart", { total: 9.99 });
+  });
+  await expect.poll(() => page.evaluate(() => window.refreshes)).toBe(1);
+  expect(calls).toEqual([false, true]);
+  await page.evaluate(() => controller.runtime.clear());
+  await expect.poll(() => page.evaluate(() => window.refreshes)).toBe(2);
+  expect(calls).toEqual([false, true, false]);
+  await page.evaluate(() => controller.stop());
+});
+
+test("Next client reports Draft failures without reloading or pretending SSR was connected", async ({
+  page,
+}) => {
+  await page.route("**/api/next-test-mode", (route) =>
+    route.fulfill({ status: 403, body: "Forbidden" }),
+  );
+  const result = await page.evaluate(async () => {
+    const { setupNextTestModeClient } = await import("/client.js");
+    const errors = [];
+    let reloads = 0;
+    const controller = setupNextTestModeClient({
+      enabled: true,
+      refresh: () => {
+        reloads++;
+      },
+      onError: (error) => errors.push(error.message),
+    });
+    await controller.ready.catch(() => {});
+    controller.stop();
+    return { errors, reloads };
+  });
+  expect(result.reloads).toBe(0);
+  expect(result.errors[0]).toContain("HTTP 403");
+});
+
+test("Next client serializes rapid changes while Draft activation is in flight", async ({
+  page,
+}) => {
+  let release;
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  const calls = [];
+  let active = false;
+  await page.route("**/api/next-test-mode", async (route) => {
+    const { enabled } = route.request().postDataJSON();
+    calls.push(enabled);
+    if (enabled) await gate;
+    const changed = active !== enabled;
+    active = enabled;
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ enabled, changed }),
+    });
+  });
+  try {
+    await page.evaluate(async () => {
+      const { setupNextTestModeClient } = await import("/client.js");
+      window.refreshes = 0;
+      window.controller = setupNextTestModeClient({
+        enabled: true,
+        refresh: () => {
+          window.refreshes++;
+        },
+      });
+      await controller.ready;
+      controller.runtime.setMock("/api/cart", { total: 7 });
+    });
+    await expect.poll(() => calls).toEqual([false, true]);
+    await page.evaluate(() => controller.runtime.clear());
+    release();
+    await expect.poll(() => calls).toEqual([false, true, false]);
+    await expect.poll(() => page.evaluate(() => window.refreshes)).toBe(1);
+    await page.evaluate(() => controller.stop());
+  } finally {
+    release();
+  }
 });
