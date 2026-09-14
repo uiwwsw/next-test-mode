@@ -56,7 +56,7 @@ jobs:
           import { execFileSync } from 'node:child_process';
           import { appendFileSync, readFileSync } from 'node:fs';
           const { name, version } = JSON.parse(readFileSync('package.json', 'utf8'));
-          const response = await fetch(`https://registry.npmjs.org/${name}/${version}`, { signal: AbortSignal.timeout(15000) });
+          const response = await fetch(`https://registry.npmjs.org/${name}/${version}?verify=${Date.now()}`, { signal: AbortSignal.timeout(15000) });
           if (response.ok) {
             const published = await response.json();
             const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
@@ -86,7 +86,7 @@ jobs:
           const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
           for (let attempt = 1; attempt <= 36; attempt++) {
             try {
-              const response = await fetch(`https://registry.npmjs.org/${name}/${version}`, { signal: AbortSignal.timeout(15000) });
+              const response = await fetch(`https://registry.npmjs.org/${name}/${version}?verify=${Date.now()}`, { signal: AbortSignal.timeout(15000) });
               if (!response.ok) throw new Error(`Registry returned HTTP ${response.status}`);
               const published = await response.json();
               assert.equal(published.name, name);
@@ -103,3 +103,10 @@ jobs:
             }
           }
           JS
+
+      - name: Point old package users to the verified replacement
+        if: env.NPM_DIST_TAG == 'latest'
+        run: |
+          npm deprecate '@uiwwsw/test-mode@*' 'Renamed to @uiwwsw/next-test-mode. Next.js Draft Mode and migration guide: https://github.com/uiwwsw/next-test-mode/blob/main/docs/migration.md'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

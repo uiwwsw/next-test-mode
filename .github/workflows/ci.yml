@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['18.17.0', '20', '22', '24']
+        node: ['20.9.0', '22', '24']
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -53,7 +53,7 @@ jobs:
       - run: npm run test:browser
 
   next:
-    name: Next.js automatic SSR
+    name: Next.js production rendering
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -68,3 +68,4 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:next
+      - run: npm run test:demo

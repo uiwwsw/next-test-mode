@@ -1,4 +1,4 @@
-import type { TestModeOptions, TestModeOverlayOptions } from "@uiwwsw/test-mode";
+import type { TestModeOptions, TestModeOverlayOptions } from "@uiwwsw/next-test-mode";
 
 const readNodeEnv = () =>
   (globalThis as { process?: { env?: Record<string, string | undefined> } })

@@ -1,4 +1,4 @@
-import { defineStory, entry } from "@uiwwsw/test-mode";
+import { defineStory, entry } from "@uiwwsw/next-test-mode";
 
 export const authStories = [
   defineStory({

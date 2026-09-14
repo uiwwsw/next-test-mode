@@ -11,8 +11,8 @@ const fixture = (run) => {
   const dir = mkdtempSync(join(tmpdir(), 'test-mode-release-'));
   const git = (...args) => execFileSync('git', args, { cwd: dir, stdio: 'pipe' });
   const manifest = (version) => {
-    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: '@uiwwsw/test-mode', version }));
-    writeFileSync(join(dir, 'package-lock.json'), JSON.stringify({ name: '@uiwwsw/test-mode', version, packages: { '': { version } } }));
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: '@uiwwsw/next-test-mode', version }));
+    writeFileSync(join(dir, 'package-lock.json'), JSON.stringify({ name: '@uiwwsw/next-test-mode', version, packages: { '': { version } } }));
   };
   const check = (tag, prerelease = '') => spawnSync(process.execPath, [script], { cwd: dir, encoding: 'utf8', env: { ...process.env, RELEASE_TAG: tag, RELEASE_PRERELEASE: prerelease, GITHUB_ENV: '' } });
   try {

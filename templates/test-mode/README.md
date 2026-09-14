@@ -1,67 +1,30 @@
-# Test Mode App Template
+# 앱 소유의 테스트 폴더
 
-Keep your API calls. Keep test scenarios in their own folder. Change data from the console.
+API 호출부는 그대로 두고, 반복할 mock·patch·story를 이 폴더에서 수정하세요. 임시 값은 Console의 `test.mock()` / `test.patch()`로 확인한 뒤 `test.clear()`하면 됩니다.
 
-This is an app-owned folder: edit mock/patch data and reusable screen scenarios here, then select them from DevTools. Install once in the client bootstrap and continue using the app's existing browser `fetch()` calls. Each call site can keep its normal production code.
-
-For a one-off check, skip creating scenario files: `test.patch('/api/cart', { total: 9.99 })` or `test.mock('/api/cart', { items: [], total: 0 })` applies a temporary value in memory. `test.clear()` or a reload discards those values. When an experiment is useful again, capture it in `features/` and `stories/` so the team can edit, review and reuse it.
-
-Copy this folder into your app, usually as:
-
-```txt
-src/test-mode/
+```bash
+cp -R node_modules/@uiwwsw/next-test-mode/templates/test-mode src/test-mode
 ```
 
-Recommended structure:
+## Next App Router
 
-```txt
-src/test-mode/
-  config.ts
-  index.ts
-  install.ts
-  features/
-    auth.ts
-  stories/
-    auth.stories.ts
-```
-
-- `features/*`: one API mock/patch behavior per entry.
-- `stories/*`: combinations of feature entries for shared screen states.
-- `config.ts`: app-specific runtime settings.
-- `index.ts`: creates the app test-mode runtime.
-- `install.ts`: installs console, overlay, and fetch patching.
-
-Put `pages` on feature entries. Stories inherit and merge the pages from their referenced features, so a story usually does not need its own `pages`.
-
-Console basics:
-
-```js
-test.patch('/api/cart', { total: 9.99 }); // one-off response value
-test.clear();                           // restore the real API
-test();
-test.search();
-test.search("login");
-test.feat.list();
-test.story.list("/login");
-test.story.set("auth.login.locked");
-```
-
-After installing, call `installAppTestMode()` once from your client bootstrap.
-
-Temporary JSON is not persisted; registered feature/story selections are persisted in cookie/localStorage. This browser template does not intercept SSR data fetching. Use the [server adapter](https://github.com/uiwwsw/test-mode/blob/main/docs/server-rendering.md) for server requests.
-
-## Enable it deliberately
-
-The template defaults to enabled only when `NODE_ENV` is `development` or `test`.
-For a Vite browser app, replace `runtimeConfig.enabled` in `config.ts` with:
+먼저 패키지의 `init`으로 서버·브라우저·Draft 경로를 생성하세요. 이 폴더에서 브라우저용 runtime을 만들거나 `install.ts`를 중복 실행하지 않고, 서버와 브라우저가 공유할 순수 등록 목록을 만듭니다.
 
 ```ts
-enabled: () => import.meta.env.DEV,
+// src/test-mode/catalog.ts
+import { authFeatures } from './features/auth';
+import { authStories } from './stories/auth.stories';
+
+export const catalog = {
+  definitions: [...authFeatures],
+  stories: [...authStories],
+};
 ```
 
-Use your own build/environment condition in other apps. A browser without a
-`process` global is disabled by default. Install once, retain the returned cleanup
-function and invoke it on teardown or HMR disposal. Selecting a scenario does not
-refetch application data; trigger the affected request or reload the page.
+생성된 서버 hook의 `setupNextTestMode({ ...catalog, enabled: true })`, 클라이언트 hook의 `setupNextTestModeClient({ ...catalog, enabled: 기존환경조건 })`에 같은 목록을 전달하세요. `/src` 구조의 hook에서는 `./test-mode/catalog`로 import합니다. 서버에서도 실행하는 정의에는 DOM이나 브라우저 전용 라이브러리를 넣지 마세요. `config.ts`의 범용 환경 감지 대신 생성된 Next 환경 조건을 유지합니다.
 
-Next.js에서 직접 JSON과 SSR까지 바로 연결하려면 `npx @uiwwsw/test-mode init --next`로 시작하세요. 이 템플릿은 API별 정의와 공유 시나리오를 앱 소유 폴더에 남기는 예제입니다. 두 설치 방식을 중복 실행하지 말고, 기존 설치의 옵션에 카탈로그를 등록하세요. [자동 SSR 연결 가이드](https://github.com/uiwwsw/test-mode/blob/main/docs/server-rendering.md).
+등록 후 Console에서 `test.search()`로 목록을 보고 `test.story('auth.locked')`처럼 선택합니다. 정확한 story key는 `stories/auth.stories.ts`를 확인하세요. 전체 응답은 파일에 두고 선택 key만 쿠키로 보내면 큰 데이터도 JSON 쿠키 제한을 피할 수 있습니다.
+
+## 범용 브라우저 앱
+
+`index.ts` / `config.ts` / `install.ts`는 Next 자동 연결이 없는 앱의 수동 설치 예시입니다. `config.ts`의 enabled 조건을 앱의 환경 변수에 맞추고 시작 시 `installAppTestMode()`를 한 번 호출하세요. 반환된 cleanup은 종료/HMR에 실행합니다. Next의 생성된 설치와 함께 실행하지 마세요.

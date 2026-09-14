@@ -1,4 +1,4 @@
-import { installMockFetch, installTestModeOverlay } from "@uiwwsw/test-mode";
+import { installMockFetch, installTestModeOverlay } from "@uiwwsw/next-test-mode";
 import { testOverlayConfig } from "./config";
 import { runtime } from "./index";
 

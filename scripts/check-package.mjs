@@ -43,6 +43,7 @@ try {
     "dist/setup.js",
     "dist/node.js",
     "dist/next.js",
+    "dist/client.js",
     "dist/index.d.ts",
     "dist/types.d.ts",
     "src/types.ts",
@@ -61,7 +62,7 @@ try {
     );
   const readme = readFileSync("README.md", "utf8");
   for (const match of readme.matchAll(
-    /https:\/\/raw\.githubusercontent\.com\/uiwwsw\/test-mode\/[^/]+\/([^"\s)]+)/g,
+    /https:\/\/raw\.githubusercontent\.com\/uiwwsw\/next-test-mode\/[^/]+\/([^"\s)]+)/g,
   )) {
     assert.ok(
       existsSync(resolve(match[1])),
@@ -91,12 +92,19 @@ try {
     ],
     temp,
   );
-  const installed = join(temp, "node_modules/@uiwwsw/test-mode");
+  const installed = join(temp, "node_modules/@uiwwsw/next-test-mode");
   const manifest = JSON.parse(
     readFileSync(join(installed, "package.json"), "utf8"),
   );
-  assert.equal(manifest.name, "@uiwwsw/test-mode");
-  assert.match(run(process.execPath, [join(installed, manifest.bin["test-mode"]), "--help"], temp), /init --next/);
+  assert.equal(manifest.name, "@uiwwsw/next-test-mode");
+  assert.match(
+    run(
+      process.execPath,
+      [join(installed, manifest.bin["next-test-mode"]), "--help"],
+      temp,
+    ),
+    /init/,
+  );
   for (const entry of Object.values(manifest.exports)) {
     assert.ok(
       files.has(entry.import.replace(/^\.\//, "")),
@@ -114,13 +122,13 @@ try {
       "-e",
       `
     import assert from 'node:assert/strict';
-    import { createTestMode, defineMock, createMockFetch } from '@uiwwsw/test-mode';
-    const core = await import('@uiwwsw/test-mode/core');
-    const browser = await import('@uiwwsw/test-mode/browser');
-    const adapter = await import('@uiwwsw/test-mode/fetch');
-    const server = await import('@uiwwsw/test-mode/server');
-    const node = await import('@uiwwsw/test-mode/node');
-    const setup = await import('@uiwwsw/test-mode/setup');
+    import { createTestMode, defineMock, createMockFetch } from '@uiwwsw/next-test-mode';
+    const core = await import('@uiwwsw/next-test-mode/core');
+    const browser = await import('@uiwwsw/next-test-mode/browser');
+    const adapter = await import('@uiwwsw/next-test-mode/fetch');
+    const server = await import('@uiwwsw/next-test-mode/server');
+    const node = await import('@uiwwsw/next-test-mode/node');
+    const setup = await import('@uiwwsw/next-test-mode/setup');
     assert.equal(typeof node.withTestMode, 'function');
     assert.equal(typeof node.installServerTestMode, 'function');
     assert.equal(typeof setup.setupTestMode, 'function');
@@ -144,32 +152,40 @@ try {
   });
   // Node entry consumers use Node's standard type declarations. Browser/root
   // imports remain independent from Node and the optional Next.js peer.
-  cpSync(resolve("node_modules/@types/node"), join(temp, "node_modules/@types/node"), { recursive: true });
-  cpSync(resolve("node_modules/undici-types"), join(temp, "node_modules/undici-types"), { recursive: true });
+  cpSync(
+    resolve("node_modules/@types/node"),
+    join(temp, "node_modules/@types/node"),
+    { recursive: true },
+  );
+  cpSync(
+    resolve("node_modules/undici-types"),
+    join(temp, "node_modules/undici-types"),
+    { recursive: true },
+  );
   writeFileSync(
     join(temp, "consumer.ts"),
     `
-    import { createTestMode, defineMock, definePatch, createMockFetch } from '@uiwwsw/test-mode';
+    import { createTestMode, defineMock, definePatch, createMockFetch } from '@uiwwsw/next-test-mode';
     const mock = defineMock<{ name: string }, { greeting: string }>('/hello', ({ body }) => ({ greeting: body?.name ?? 'world' }));
     const patch = definePatch<unknown, { total: number }>('/total', (data) => ({ total: data.total + 1 }));
     const runtime = createTestMode({ enabled: true, definitions: [mock], patchDefinitions: [patch] });
     runtime.setMock('/cart', { items: [] }, { status: 200 });
     runtime.setPatch('/cart', { total: 9.99 }, { method: 'GET' });
-    const overrides: readonly import('@uiwwsw/test-mode/core').ResponseOverride[] = runtime.overrides();
+    const overrides: readonly import('@uiwwsw/next-test-mode/core').ResponseOverride[] = runtime.overrides();
     runtime.resetOverrides('/cart', { method: 'GET' });
     void overrides;
     const wrapped: typeof fetch = createMockFetch(runtime);
-    const core: typeof import('@uiwwsw/test-mode').createTestMode = (await import('@uiwwsw/test-mode/core')).createTestMode;
-    const adapter: typeof createMockFetch = (await import('@uiwwsw/test-mode/fetch')).createMockFetch;
-    const browser: typeof import('@uiwwsw/test-mode').installConsole = (await import('@uiwwsw/test-mode/browser')).installConsole;
-    const server: typeof import('@uiwwsw/test-mode').createServerTestMode = (await import('@uiwwsw/test-mode/server')).createServerTestMode;
+    const core: typeof import('@uiwwsw/next-test-mode').createTestMode = (await import('@uiwwsw/next-test-mode/core')).createTestMode;
+    const adapter: typeof createMockFetch = (await import('@uiwwsw/next-test-mode/fetch')).createMockFetch;
+    const browser: typeof import('@uiwwsw/next-test-mode').installConsole = (await import('@uiwwsw/next-test-mode/browser')).installConsole;
+    const server: typeof import('@uiwwsw/next-test-mode').createServerTestMode = (await import('@uiwwsw/next-test-mode/server')).createServerTestMode;
     const scope = server({ cookieHeader: null, definitions: [mock], patchDefinitions: [patch] });
     const serverFetch: typeof fetch = scope.fetch;
     void [core, adapter, browser, serverFetch];
     void wrapped;
-    const { setupTestMode } = await import('@uiwwsw/test-mode/setup');
-    const { withTestMode, installServerTestMode } = await import('@uiwwsw/test-mode/node');
-    const { setupNextTestMode }: typeof import('@uiwwsw/test-mode/next') = {} as typeof import('@uiwwsw/test-mode/next');
+    const { setupTestMode } = await import('@uiwwsw/next-test-mode/setup');
+    const { withTestMode, installServerTestMode } = await import('@uiwwsw/next-test-mode/node');
+    const { setupNextTestMode }: typeof import('@uiwwsw/next-test-mode/next') = {} as typeof import('@uiwwsw/next-test-mode/next');
     const wrappedHandler = withTestMode((request, response) => { response.end(request.url); }, { enabled: false });
     const cleanup: () => void = wrappedHandler.dispose;
     void [setupTestMode, installServerTestMode, setupNextTestMode, cleanup];

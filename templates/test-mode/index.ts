@@ -1,4 +1,4 @@
-import { createTestMode } from "@uiwwsw/test-mode";
+import { createTestMode } from "@uiwwsw/next-test-mode";
 import { runtimeConfig } from "./config";
 import { authFeatures } from "./features/auth";
 import { authStories } from "./stories/auth.stories";

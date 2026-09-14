@@ -1,4 +1,4 @@
-import { defineMock, httpResult } from "@uiwwsw/test-mode";
+import { defineMock, httpResult } from "@uiwwsw/next-test-mode";
 
 export const authFeatures = [
   defineMock(

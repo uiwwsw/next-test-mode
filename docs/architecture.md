@@ -1,8 +1,8 @@
-# API response overrides for UI debugging: scope and behavior
+# Next Test Mode: architecture and guarantees
 
 ## Purpose
 
-`@uiwwsw/test-mode` lets a running application reproduce API-driven UI states by overriding responses at an explicitly connected data boundary. Browser console commands replace or patch browser fetch responses; reusable definitions and stories capture shared scenarios. A visible overlay indicates active test mode on relevant pages. The package name describes that visible application mode; its product description is “Console-first API response overrides for UI debugging.”
+`@uiwwsw/next-test-mode` lets a running application reproduce API-driven UI states by overriding responses at an explicitly connected data boundary. Browser console commands replace or patch browser fetch responses; reusable definitions and stories capture shared scenarios. A visible overlay indicates active test mode on relevant pages. The Next.js adapter uses Draft Mode to preview CSR, SSR, ISR and SSG from the same Console commands.
 
 A scenario is a configuration, not an automated test. The library does not make assertions, decide pass/fail, run a browser, host an API, seed a database, or reset application caches. Browser setup can connect an application refetch callback. SSR synchronization defaults to an automatic page reload after changes. Test assertions remain external.
 
@@ -12,7 +12,7 @@ The console exposes `mock`, `patch`, `overrides`, and `reset` for immediate expe
 
 An override takes precedence over selected definitions for that request. A patch override bypasses a selected mock so that it can operate on the actual HTTP response; a mock override bypasses selected patches. Removing an override reveals the underlying selected scenario. `clear()` removes both. Explicit cookie-scoped requests ignore in-memory overrides to keep server adapters request-scoped.
 
-Override values are validated JSON snapshots, copied at input, inspection, and resolution boundaries. Patches shallow-merge object fields and reject non-object upstream payloads. Changes notify subscribers; setup can refresh the app or automatically reload SSR pages. The application owns cache invalidation outside fetch. The demo subscribes and cancels superseded requests to update its preview from the console without extra clicks.
+Override values are validated JSON snapshots, copied at input, inspection, and resolution boundaries. Patches shallow-merge object fields and reject non-object upstream payloads. Changes notify subscribers; setup can refresh the app or automatically reload SSR pages. The application owns cache invalidation outside fetch. The Next client coordinates Draft Mode before automatically reloading the page.
 
 ## Request lifecycle
 
@@ -44,7 +44,10 @@ Mock and patch features are alternative behaviors for a matching path/method/cas
 | `src/server.ts` | Incoming-cookie selection and optional JSON handoff, fresh runtime and fetch per request |
 | `src/setup.ts` | One-call browser setup, JSON cookie synchronization, debounced refresh and cleanup |
 | `src/node.ts` | AsyncLocalStorage request wrapper and framework request-context fetch installation |
-| `src/next.ts` | Optional Next.js Node instrumentation adapter using request headers |
+| `src/next.ts` | Next Node instrumentation and Draft Mode control route |
+| `src/client.ts` | Serialized Draft handshake, Console setup and refresh |
+| `src/internal/next-request.ts` | Guarded, read-only Next Draft-provider cookie bridge |
+| `src/internal/draft-handler.ts` | Same-origin controls, optional authorization and preview ownership |
 | `src/internal/ssr-state.ts` | Versioned, validated and size-bounded JSON cookie snapshots |
 | `bin/test-mode.mjs` | Next.js instrumentation scaffolding without modifying existing files |
 | `templates/test-mode` | App-owned example definitions, environment configuration and bootstrap |
@@ -54,7 +57,7 @@ Mock and patch features are alternative behaviors for a matching path/method/cas
 | `scripts/check-package.mjs` | Tarball contents, independent install, public exports and consumer type validation |
 | `.github/workflows` | Repeatable verification and guarded npm publication |
 
-The runtime has no external dependencies and no import-time DOM or fetch mutation. The root ESM entry remains compatible; `./core`, `./fetch`, `./browser`, `./setup`, `./server`, `./node` and `./next` provide independent entry points. Node built-ins and the optional Next peer are only imported through the Node/Next entries. Shared contracts live in `src/types.ts`, with persistence, path normalization and lifecycle helpers in `src/internal/`. Importing core or server does not load browser rendering or console implementations. Sources are shipped with source maps and declaration maps for debugging.
+The runtime has no external dependencies and no import-time DOM or fetch mutation. The root ESM entry remains compatible; `./core`, `./fetch`, `./browser`, `./setup`, `./server`, `./node`, `./next` and `./client` provide independent entry points. Node built-ins and the optional Next peer are only imported through the Node/Next entries. Shared contracts live in `src/types.ts`, with persistence, path normalization and lifecycle helpers in `src/internal/`. Importing core or server does not load browser rendering or console implementations. Sources are shipped with source maps and declaration maps for debugging.
 
 ## State and environment
 
@@ -74,11 +77,11 @@ The factory rejects calls in a browser before any state mutation. Call it inside
 
 `withTestMode(handler)` installs a dispatcher once and uses AsyncLocalStorage for each incoming Node request. Unchanged global fetch calls use that request's runtime; outside the scope they use the original transport. Response completion deactivates the scope. Active test responses receive private/no-store headers. Cleanup supports nested installs and preserves newer third-party hooks.
 
-`installServerTestMode({ getRequest })` supports frameworks with their own current-request accessor. A WeakMap keyed by request identity keeps selections and counters local. A fetch accessor follows later framework replacements, while function proxies preserve framework marker properties. AsyncLocalStorage bypasses recursive interception. `setupNextTestMode()` uses Next headers to supply request identity and cookies. Override responses sit outside Next's fetch cache: mocked values never enter it, and patches only transform the returned response. Request-context errors that signal dynamic rendering are rethrown; unscoped startup fetches pass through.
+`installServerTestMode({ getRequest })` supports frameworks with their own current-request accessor. A WeakMap keyed by request identity keeps selections and counters local. A fetch accessor follows later framework replacements, while function proxies preserve framework marker properties. AsyncLocalStorage bypasses recursive interception. `setupNextTestMode()` checks public `draftMode()` without opting ordinary requests into dynamic rendering. Active Draft sessions use a guarded read-only bridge into the internal provider cookie jar for request identity and test cookies, including inside cache scopes. This version-sensitive boundary is tested against Next 16.3.5; unsupported provider shapes throw. Startup and generateStaticParams fetches pass through. Override responses sit outside Next's fetch cache: mocked values never enter it, and patches only transform the returned response. Request-context errors that signal dynamic rendering are rethrown; unscoped startup fetches pass through.
 
 The new browser setup disables app-owned html/body dataset markers by default to avoid mutating React hydration attributes. The visible overlay still works. Low-level overlay defaults stay compatible; callers may explicitly set `datasetName` or false. Both setup and adapters are explicit installations with cleanup, not import-time hooks.
 
-Already-rendered HTML, static builds, database calls, Edge runtimes, and cache hits bypassing fetch cannot be changed retroactively. Both public CSR and actual SSR demos are deployed on Vercel. CI installs the npm tarball and generated instrumentation in Next.js 16.3.5, verifies raw HTML, a second browser session, force-cache isolation and absence of hydration errors. See [server integration](./server-rendering.md).
+Draft Mode bypasses normal Next page/data caches for a browser session. SSR, SSG, ISR, force-static, generated routes, unstable_cache and Cache Components/use cache are exercised in real production fixtures; the ordinary prerender manifest and anonymous cached output stay intact. Pure static export, Pages Router, Edge, direct DB calls and external caches are outside the automatic adapter. CI verifies raw HTML, second-browser isolation, clear-to-cache behavior, hydration, and a production build with the tool disabled. See [server integration](./server-rendering.md).
 
 ## Contracts
 
@@ -100,6 +103,14 @@ The source-only scaffold used Dominos-specific storage/event names and assumed a
 
 ## Release contract
 
-A release must have an existing `v<package.version>` tag, matching lockfile versions, and a commit included in `origin/main`. Runtime, packaging, browser and actual Next.js checks must all pass before the publish job can run. Stable versions use npm's latest channel; prereleases use next. A GitHub release's prerelease flag must agree with the version. Publish credentials are only exposed to the publish step; checkout credentials are not persisted. npm publication is immutable, so changes after a release need a new version.
+A release must have an existing `v<package.version>` tag, matching lockfile versions, and a commit included in `origin/main`. Runtime, packaging, browser and actual Next.js checks must all pass before the publish job can run. Stable versions use npm's latest channel; prereleases use next. A GitHub release's prerelease flag must agree with the version. Publish credentials are only exposed to publication and the old-package migration notice step; checkout credentials are not persisted. npm publication is immutable, so changes after a release need a new version.
 
 References: [Fetch standard](https://fetch.spec.whatwg.org/), [npm publishing](https://docs.npmjs.com/cli/v11/commands/npm-publish/), [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/).
+
+## Draft lifecycle and control isolation
+
+The client writes the bounded JSON snapshot first, then sends an authenticated-by-origin POST through the original fetch captured before installation. Requests serialize and reconcile the latest snapshot; acknowledged snapshots suppress duplicate refresh timers. Startup reconciles an expired deployment Draft cookie or an owned session with no remaining overrides. Failures reject `ready`/`sync`, report an error and do not reload; the prior local cookie write may already have succeeded.
+
+The control route validates environment, method, Origin/Host, custom header, fetch metadata, JSON and a 1,024-byte body bound. Optional application authorization runs in an AsyncLocalStorage bypass context, so test mocks cannot forge its fetch response. The same bypass covers Draft bookkeeping. An HttpOnly ownership marker allows clear to close sessions opened by this tool while preserving a previously active CMS preview. The application remains responsible for protecting its preview environment and server-rendered routes.
+
+Next Draft Mode controls caching; overrides remain outside Next's fetch cache. The private bridge only reads the two configured test cookies, never forwards the incoming authentication header, and never mutates Next internals. Upgrades must pass production integration checks; a matching peer range alone does not certify future Next releases.
