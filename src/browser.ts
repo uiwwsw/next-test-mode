@@ -343,7 +343,7 @@ export const installConsole = (
       "test.clear()",
     ],
     summary:
-      "Use mock/patch to try your own JSON values immediately, story for shared scenarios, and clear to restore the real API.",
+      "Override browser API responses with mock/patch, or select registered scenarios with story. Temporary values stay in this runtime; SSR needs a server adapter and a new render. Use clear to reset.",
   });
   const run = (input?: string) =>
     typeof input === "string" && input.trim() ? apply(input) : help();

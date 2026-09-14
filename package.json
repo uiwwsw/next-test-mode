@@ -1,7 +1,7 @@
 {
   "name": "@uiwwsw/test-mode",
-  "version": "0.3.1",
-  "description": "Framework-neutral API scenario runtime for development and QA: fetch mocks, response patches, browser controls, and server adapters.",
+  "version": "0.4.0",
+  "description": "Console-first API response overrides for UI debugging: browser fetch mocks and patches, shared scenarios, and request-scoped SSR integration.",
   "type": "module",
   "packageManager": "npm@11.16.0",
   "license": "MIT",
@@ -32,6 +32,10 @@
     "./fetch": {
       "types": "./dist/fetch.d.ts",
       "import": "./dist/fetch.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
     }
   },
   "main": "./dist/index.js",
@@ -50,7 +54,8 @@
     "release:check": "node scripts/check-release.mjs",
     "dev:example": "npm run build && node scripts/serve-example.mjs",
     "docs:assets": "npm run build && node scripts/render-doc-assets.mjs",
-    "build:demo": "npm run build && node scripts/build-demo.mjs"
+    "build:demo": "npm run build && node scripts/build-demo.mjs",
+    "dev:ssr": "npm run build && node examples/server/server.mjs"
   },
   "keywords": [
     "api-mocking",
@@ -62,7 +67,10 @@
     "testing",
     "response-patching",
     "test-mode",
-    "vanilla"
+    "vanilla",
+    "devtools",
+    "ui-debugging",
+    "ssr"
   ],
   "engines": {
     "node": ">=18.17"
@@ -74,7 +82,7 @@
   "bugs": {
     "url": "https://github.com/uiwwsw/test-mode/issues"
   },
-  "homepage": "https://github.com/uiwwsw/test-mode#readme",
+  "homepage": "https://test-mode-tau.vercel.app/",
   "publishConfig": {
     "access": "public"
   },

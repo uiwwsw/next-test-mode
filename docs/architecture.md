@@ -1,8 +1,8 @@
-# API scenario runtime: scope and behavior
+# API response overrides for UI debugging: scope and behavior
 
 ## Purpose
 
-`@uiwwsw/test-mode` lets a running application reproduce API-driven UI states without changing the production API or hardcoding temporary branches into UI components. Developers define transport behaviors; QA selects named scenarios in the browser. A visible overlay indicates active test mode on relevant pages.
+`@uiwwsw/test-mode` lets a running application reproduce API-driven UI states by overriding responses at an explicitly connected data boundary. Browser console commands replace or patch browser fetch responses; reusable definitions and stories capture shared scenarios. A visible overlay indicates active test mode on relevant pages. The package name describes that visible application mode; its product description is “Console-first API response overrides for UI debugging.”
 
 A scenario is a configuration, not an automated test. The library does not make assertions, decide pass/fail, run a browser, host an API, seed a database, or reset application caches. An application or external test runner must trigger a new request after changing scenarios.
 
@@ -41,13 +41,14 @@ Mock and patch features are alternative behaviors for a matching path/method/cas
 | `src/core.ts` | Definitions, validation, route/case matching, active state, counters, stories, server integration |
 | `src/browser.ts` | Console API, extensions, page-aware overlay, subscriptions, installation and cleanup |
 | `src/fetch.ts` | Request/Response adaptation, transport preservation, cancellation, fetch installation |
+| `src/server.ts` | Incoming-cookie selection, fresh runtime and fetch per server request |
 | `templates/test-mode` | App-owned example definitions, environment configuration and bootstrap |
 | `tests` | Runtime and release regression tests using Node's test runner |
 | `tests/browser` | Chromium integration of the published ESM build |
 | `scripts/check-package.mjs` | Tarball contents, independent install, public exports and consumer type validation |
 | `.github/workflows` | Repeatable verification and guarded npm publication |
 
-The runtime has no external dependencies and no import-time DOM or fetch mutation. The root ESM entry remains compatible; `./core`, `./fetch` and `./browser` provide independent entry points. Shared contracts live in `src/types.ts`, with persistence, path normalization and lifecycle helpers in `src/internal/`. Importing core does not load browser rendering or console implementations. Sources are shipped with source maps and declaration maps for debugging.
+The runtime has no external dependencies and no import-time DOM or fetch mutation. The root ESM entry remains compatible; `./core`, `./fetch`, `./browser` and `./server` provide independent entry points. Shared contracts live in `src/types.ts`, with persistence, path normalization and lifecycle helpers in `src/internal/`. Importing core or server does not load browser rendering or console implementations. Sources are shipped with source maps and declaration maps for debugging.
 
 ## State and environment
 
@@ -56,6 +57,14 @@ Activation defaults to `NODE_ENV=development` or `NODE_ENV=test`. Browsers witho
 The browser prefers localStorage and uses cookies for handoff/fallback. Each runtime also maintains an in-memory fallback for denied persistence or quota failure. Browser subscribers receive one notification per local change; instances sharing the configured event name can refresh from storage. Use distinct storage, cookie and event names for independent runtimes on one origin. Defaults are `test-mode.entries`, `test-mode:change`, and console namespace `__testMode`.
 
 Without a browser, an instance owns its active state in memory. For shared SSR/server instances, always pass the incoming cookie header (including the empty string when absent) to `resolve`/`applyPatch`. Request counters belong to the runtime instance and entry, so use separate instances if per-request or per-session sequencing is required. This library does not interpret a test-mode cookie as an authentication credential.
+
+## Server rendering boundary
+
+`createServerTestMode({ cookieHeader, ...options })` creates a new runtime per incoming request. It captures registered feature selection from that request's cookie (null means no selection) and returns a fetch bound to the instance state. It never installs a global hook, forwards an incoming Cookie header, or stores data across requests. The wrapper uses `cookieHeader: false` so outgoing authentication cookies cannot reselect a scenario or suppress an override authored by server code. Existing fetch options retain their string/null/undefined behavior.
+
+The factory rejects calls in a browser before any state mutation. Call it inside the server request handler/loader, not at module scope; do not cache its mutable result across requests. Definitions may be shared, but state captured by user handlers is outside the runtime's isolation guarantees.
+
+Browser temporary JSON does not cross to the server. Named scenarios can cross through cookies when both sides register the same catalog and cookie key. SSR/Server Components need a new render through the wrapped data fetch. Already-rendered HTML, static builds, database calls and cache hits bypassing the wrapper cannot be changed retroactively. The public Vercel playground demonstrates browser fetch; the local Node HTTP example verifies actual HTML generation and the Chromium cookie handoff. Framework cache and hydration policy remain app-owned. See [server integration](./server-rendering.md).
 
 ## Contracts
 

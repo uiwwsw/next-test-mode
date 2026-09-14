@@ -2,6 +2,8 @@
 
 설치와 첫 실행은 [README](https://github.com/uiwwsw/test-mode#readme)를 참고하세요.
 
+test mode는 **API 응답을 바꾸는 UI 디버깅 도구**입니다. 기본 콘솔 기능은 브라우저 fetch에 적용합니다. SSR/Server Component의 데이터 조회에는 서버 연결이 필요하며, 브라우저에서 직접 입력한 임시 JSON을 서버로 자동 전송하지 않습니다. [CSR / SSR 지원 범위와 연결 예제](./server-rendering.md).
+
 ## 직접 응답 값 넣기
 
 콘솔의 `test.mock(path, data, options?)`는 등록 없이 즉시 응답을 교체하고, `test.patch(path, fields, options?)`는 실제 응답의 필드를 변경합니다.
@@ -138,6 +140,8 @@ React/Next.js의 effect에서는 `return installAppTestMode()`로 정리 함수�
 
 ## 서버 / axios 어댑터
 
+SSR이나 서버 loader의 fetch에는 요청마다 `createServerTestMode({ cookieHeader, ...options })`를 생성하는 방법을 권장합니다. 반환된 `runtime`과 `fetch`는 그 요청 전용입니다. [서버 렌더링 가이드](./server-rendering.md)에서 공유 시나리오·Next.js·캐시 조건을 확인하세요.
+
 서버나 fetch를 사용하지 않는 API 클라이언트는 `runtime.resolve(request)`와 `runtime.applyPatch({ ...request, data })`로 연결할 수 있습니다.
 
 ```ts
@@ -159,4 +163,3 @@ if (mock) {
 서버에서는 모든 요청에 `cookieHeader`를 명시해야 사용자별 선택 상태가 섞이지 않습니다. 활성화 cookie는 인증 수단이 아닙니다. 앱의 환경·접근 조건으로 test mode 사용 범위를 결정하세요. 기존 `patch()`도 유지하지만 `null` payload와 매칭 실패를 구분하려면 `applyPatch()`를 사용하세요.
 
 상세 동작과 한계: [설계 및 보장 범위](./architecture.md), [Story 설계](./story-test-design.md).
-
