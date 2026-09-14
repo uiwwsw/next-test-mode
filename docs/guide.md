@@ -2,7 +2,7 @@
 
 설치와 첫 실행은 [README](https://github.com/uiwwsw/test-mode#readme)를 참고하세요.
 
-test mode는 **API 응답을 바꾸는 UI 디버깅 도구**입니다. 기본 콘솔 기능은 브라우저 fetch에 적용합니다. SSR/Server Component의 데이터 조회에는 서버 연결이 필요하며, 브라우저에서 직접 입력한 임시 JSON을 서버로 자동 전송하지 않습니다. [CSR / SSR 지원 범위와 연결 예제](./server-rendering.md).
+test mode는 **API 응답을 바꾸는 UI 디버깅 도구**입니다. `setupTestMode()`로 브라우저에 한 번 연결합니다. Next.js는 `npx @uiwwsw/test-mode init --next`, Node는 `withTestMode()`로 서버도 연결하면 직접 입력한 JSON을 SSR에 전달하고 자동 새로고침합니다. [CSR / SSR 지원 범위와 연결 예제](./server-rendering.md).
 
 ## 직접 응답 값 넣기
 
@@ -22,9 +22,9 @@ test.clear(); // 임시 값, feature/story, extension 모두 끄기
 - 같은 경로·method에 다시 입력하면 이전 임시 값을 교체합니다. 임시 값이 선택된 feature/story보다 우선합니다. Patch는 기존 Mock도 우회하고 실제 HTTP 응답에 적용합니다. `reset()`하면 아래에 있던 feature/story가 다시 적용되므로 완전히 실제 API로 돌아가려면 `clear()`를 사용하세요.
 - Mock은 JSON 객체·배열·문자열·숫자·boolean·null을 지원합니다. HTTP 상태는 200–599이며 HEAD/204/205/304의 본문은 생략합니다. 함수·순환 참조·undefined·NaN 등은 거부합니다. 입력 실패 시 기존 값은 유지합니다.
 - Patch는 객체의 최상위 필드를 덮어씁니다. 중첩 객체나 배열은 통째로 교체합니다. 원래 응답이 객체가 아니면 오류를 내므로 전체 교체가 필요할 때는 Mock을 쓰세요.
-- 입력과 조회 결과는 복사됩니다. 값은 해당 runtime 메모리에만 있으며 localStorage/cookie에 쓰거나 다른 탭과 공유하지 않습니다. 명시적인 `cookieHeader`를 가진 서버 요청에는 적용하지 않습니다.
+- 입력과 조회 결과는 복사됩니다. 기본값은 runtime 메모리 전용입니다. `setupTestMode({ ssr: true })`는 쿠키에 저장해 같은 브라우저의 서버 요청과 공유하고 새로고침 후 복원합니다. 전체 상태는 인코딩 후 3,500바이트까지이며 초과하면 기존 값을 유지합니다. 수동 core API의 명시적인 `cookieHeader` 선택은 기존대로 동작합니다.
 - `test.isEnabled()`와 오버레이는 임시 값도 반영합니다. `runtime.active()`는 등록된 feature 선택만 반환하며, 임시 값은 `runtime.overrides()`로 확인합니다.
-- 라이브러리는 앱 캐시를 직접 갱신하지 않습니다. 데모는 `runtime.subscribe()`를 데이터 재요청에 연결하므로 콘솔만 조작해도 즉시 화면이 바뀝니다.
+- `setupTestMode({ refresh })`에 앱의 재요청 함수를 연결할 수 있습니다. SSR 동기화 모드의 기본 refresh는 페이지 새로고침입니다. fetch 밖에 있는 앱 캐시의 무효화는 앱에서 수행합니다.
 
 TypeScript나 서버 어댑터에서는 같은 기능을 `runtime.setMock()`, `runtime.setPatch()`, `runtime.overrides()`, `runtime.resetOverrides()`로 사용합니다. `runtime.patch()`는 기존 응답 처리 API이므로 그대로 유지합니다.
 
@@ -140,11 +140,11 @@ src/test-mode/
 
 React/Next.js의 effect에서는 `return installAppTestMode()`로 정리 함수를 반환하세요. Vite의 HMR에서는 `import.meta.hot?.dispose(cleanup)`을 사용하세요. Vue/일반 앱은 클라이언트 bootstrap에서 한 번 설치하고 앱을 해제할 때 cleanup을 호출합니다.
 
-기존 API 모듈은 계속 `fetch('/api/cart')`를 호출합니다. 별도 폴더의 동작을 등록하고 콘솔에서 `test.story('cart.empty')`처럼 선택하면 다음 API 응답부터 바뀝니다. 앱의 재요청 방식은 그대로 사용하거나 `runtime.subscribe()`에 연결하세요. SSR은 아래의 요청별 서버 어댑터를 사용합니다.
+기존 API 모듈은 계속 `fetch('/api/cart')`를 호출합니다. 별도 폴더의 동작을 등록하고 콘솔에서 `test.story('cart.empty')`처럼 선택하면 다음 API 응답부터 바뀝니다. 앱의 재요청 방식은 그대로 사용하거나 `runtime.subscribe()`에 연결하세요. SSR 자동 연결은 서버 시작 지점에 한 번 설치합니다.
 
 ## 서버 / axios 어댑터
 
-SSR이나 서버 loader의 fetch에는 요청마다 `createServerTestMode({ cookieHeader, ...options })`를 생성하는 방법을 권장합니다. 반환된 `runtime`과 `fetch`는 그 요청 전용입니다. [서버 렌더링 가이드](./server-rendering.md)에서 공유 시나리오·Next.js·캐시 조건을 확인하세요.
+Next.js는 `init --next`, 일반 Node는 `withTestMode(handler)`로 시작 지점에 한 번 연결하면 fetch 호출부를 유지합니다. 필요한 조회만 수동 연결할 때는 요청마다 `createServerTestMode({ cookieHeader, ssr: true, ...options })`를 생성하세요. 반환된 `runtime`과 `fetch`는 그 요청 전용입니다. [서버 렌더링 가이드](./server-rendering.md)에서 공유 시나리오·Next.js·캐시 조건을 확인하세요.
 
 서버나 fetch를 사용하지 않는 API 클라이언트는 `runtime.resolve(request)`와 `runtime.applyPatch({ ...request, data })`로 연결할 수 있습니다.
 

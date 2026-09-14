@@ -1,61 +1,122 @@
-# CSR와 SSR에서 응답 바꾸기
+# 콘솔에서 CSR와 SSR을 함께 바꾸기
 
-test mode의 기본 기능은 **API 응답을 바꿔 UI 상태를 재현**하는 것입니다. CSR은 브라우저 fetch에, SSR은 서버의 데이터 조회에 연결합니다. Next.js 앱에 브라우저 설치 코드만 추가했다고 Server Component의 조회까지 바뀌지는 않습니다.
+**최초 연결만 하고 기존 `fetch()` 호출 코드는 그대로 둡니다.** Console에서 `test.patch()` / `test.mock()`을 입력하면 브라우저 응답과 새 서버 렌더에 같은 값이 적용됩니다. 반복해서 쓸 동작은 앱 소유의 `test-mode/` 폴더에 등록할 수 있습니다.
 
-## 브라우저와 서버 사이에 전달되는 것
+**[공개 SSR 데모 열기 →](https://test-mode-tau.vercel.app/api/ssr)**
 
-| 제어 방식 | 브라우저 | 서버 |
-| --- | --- | --- |
-| `test.mock()` / `test.patch()` | 해당 런타임 메모리에 임시 JSON 저장 | 자동 전달되지 않음 |
-| `test.story()` / `test.feat.add()` | 등록된 feature key 선택, localStorage와 쿠키에 기록 | 같은 카탈로그와 쿠키 키로 요청받으면 등록된 동작 선택 |
-| `runtime.setMock()` / `runtime.setPatch()` | 해당 런타임에 적용 | 요청 전용 서버 런타임에서 호출하면 그 요청에만 적용 |
+```js
+test.patch('/api/cart.json', { total: 12.34 }); // 서버 HTML의 가격까지 자동 변경
+test.clear(); // 원래 값으로 복귀
+```
 
-시나리오 선택 쿠키에는 feature key만 들어갑니다. 실행할 handler는 앱이 서버에 등록한 코드입니다. 브라우저에서 입력한 임의 JSON·함수·코드를 서버에서 실행하는 통로는 제공하지 않습니다.
+## Next.js: 최초 설정 한 번
 
-CSR의 화면 갱신은 앱의 refetch/invalidate 동작에 연결하세요. SSR은 선택 이후 새 HTML/RSC 요청이 필요합니다. `test.clear()`로 선택을 해제해도 이미 그려진 서버 화면은 새로운 서버 렌더를 받아야 돌아옵니다.
+```bash
+npm install @uiwwsw/test-mode
+npx @uiwwsw/test-mode init --next
+npm run dev
+```
 
-## 요청마다 만들기
+프로젝트 루트에서 실행합니다. `src/app` / `src/pages` 구조와 `tsconfig.json` 유무에 맞춰 파일을 생성합니다. 모노레포는 `--dir apps/web`처럼 앱 경로를 지정하세요. 기존 instrumentation 파일은 덮어쓰지 않고 합칠 코드를 출력합니다. 설치 후 개발 서버를 재시작하세요.
+
+생성되는 내용은 다음 두 파일뿐입니다. 페이지·컴포넌트·API 호출부는 수정하지 않습니다.
 
 ```ts
-import { createServerTestMode } from '@uiwwsw/test-mode/server';
-import { catalog } from './catalog';
-
-export async function loadCart(request: Request) {
-  const { runtime, fetch: serverFetch } = createServerTestMode({
-    ...catalog,
-    enabled: process.env.NODE_ENV === 'development',
-    cookieHeader: request.headers.get('cookie'), // 없으면 null
-    originalFetch: fetch, // 선택 사항: 프레임워크가 제공하는 fetch 사용
-  });
-
-  // 필요하면 서버 코드가 이 요청에만 적용할 값을 지정할 수 있습니다.
-  // runtime.setPatch('/api/cart', { total: 9.99 });
-  const response = await serverFetch('https://api.example.com/api/cart', {
-    cache: 'no-store',
-  });
-  if (!response.ok) throw new Error(`Cart API returned ${response.status}`);
-  return response.json();
+// instrumentation.ts (또는 .js / src/instrumentation.ts)
+export async function register() {
+  if (process.env.NODE_ENV === 'development' && process.env.NEXT_RUNTIME === 'nodejs') {
+    const { setupNextTestMode } = await import('@uiwwsw/test-mode/next');
+    setupNextTestMode();
+  }
 }
 ```
 
-- `createServerTestMode()`를 요청 handler/loader 안에서 호출하세요. 반환값을 모듈 전역이나 여러 사용자가 공유하는 캐시에 저장하지 마세요.
-- 들어온 쿠키에서 유효한 등록 key만 읽어 새로운 런타임에 복사합니다. 쿠키가 없거나 손상되었으면 선택은 비어 있습니다. 선택·임시 값·`requestCount`가 다른 요청과 분리됩니다. 직접 작성한 handler가 캡처한 전역 변수까지 격리하지는 않습니다.
-- 반환된 `fetch`를 사용한 조회만 변경됩니다. 전역 `fetch`, DB 클라이언트, 프레임워크의 렌더러를 교체하지 않습니다.
-- 외부 API에 보내는 `Cookie` 헤더는 원래대로 전달하지만, 그 쿠키로 테스트 시나리오를 재선택하지 않습니다. 들어온 페이지 요청의 쿠키를 외부 API로 복사하지 않습니다. 필요한 인증 정보는 앱이 직접 정해서 전달하세요.
-- 기본 경로 규칙은 core와 같습니다. 여러 API origin에 같은 pathname이 있으면 정의의 `match`로 origin을 구분하세요.
-- 서버의 `enabled` 조건이 실제 활성화 여부를 결정합니다. 쿠키가 이를 우회하지 않습니다. 개발·QA 환경 조건은 브라우저와 서버 양쪽에서 정하세요.
-- 브라우저에서 이 서버 factory를 호출하면 오류를 냅니다. 브라우저에서는 `createTestMode()`를 사용하세요.
+```ts
+// instrumentation-client.ts (서버 instrumentation과 같은 디렉터리)
+import { setupTestMode } from '@uiwwsw/test-mode';
 
-저수준 `createMockFetch(runtime, { cookieHeader: false })`는 outgoing Cookie를 선택 소스로 사용하지 않고 런타임 상태만 사용합니다. 이 설정은 요청 전용 런타임을 직접 구성할 때 유용합니다. 문자열은 그 쿠키로 선택을 고정하며, 기존 `null`/생략 동작은 유지합니다.
+setupTestMode({ enabled: process.env.NODE_ENV === 'development', ssr: true });
+```
 
-## 공유 카탈로그
+Console에서 **실제 서버가 호출하는 API의 pathname**을 입력합니다.
+
+```js
+test.patch('/api/cart', { total: 9.99 });
+test.mock('/api/cart', { items: [], total: 0 });
+test.clear();
+```
+
+서버가 `https://api.example.com/api/cart`를 호출하면 `/api/cart`가 대상입니다. Next 페이지 주소가 아닙니다. 초기화 이후 실행하는 전역 `fetch`가 대상이며, 앱에서 이미 별도 변수에 저장한 fetch나 독립 HTTP 클라이언트까지 바꾸지는 않습니다.
+
+지원 범위는 **Next.js 16의 Node 런타임**입니다. CI에서 실제 Next.js 16.3.5 앱에 npm tarball과 CLI를 설치하고, 수정하지 않은 Server Component의 fetch·서버 HTML·독립 방문자·`force-cache` 응답 분리·hydration 오류 여부를 Chromium으로 검증합니다. Next의 공식 [서버 instrumentation](https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation)과 [브라우저 instrumentation](https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation-client)을 사용합니다.
+
+## 일반 Node / Express / Vercel
+
+서버의 request handler를 시작 지점에서 한 번 감쌉니다. Express의 `app`도 Node request handler입니다.
 
 ```ts
-// catalog.ts — 브라우저와 서버에 모두 포함되는 앱 소유 코드
+import { createServer } from 'node:http';
+import { withTestMode } from '@uiwwsw/test-mode/node';
+import { app } from './app.js';
+
+const handler = withTestMode(app);
+const server = createServer(handler).listen(3000);
+server.on('close', () => handler.dispose());
+```
+
+Vercel의 Node `(request, response)` 함수는 `export default withTestMode(handler)`로 연결합니다. Web `Request`/`Response` 형식이나 Edge handler용 래퍼는 아닙니다. 앱의 기존 전역 `fetch()`가 해당 요청 전용 런타임을 사용합니다.
+
+브라우저에는 한 번 설치합니다.
+
+```ts
+import { setupTestMode } from '@uiwwsw/test-mode';
+
+const { runtime, stop } = setupTestMode({
+  enabled: import.meta.env.DEV, // 앱의 개발 환경 조건
+  ssr: true,
+});
+// 앱 종료/HMR 정리: stop()
+```
+
+서버 기본값은 `NODE_ENV=development` 또는 `test`일 때만 활성화입니다. `enabled: request => ...`로 요청별 조건을 정할 수도 있습니다. 브라우저와 서버 양쪽의 환경 조건이 켜져야 합니다. 쿠키로 서버의 `enabled` 조건을 우회할 수 없습니다.
+
+`allowedPaths: ['/api/cart']`를 서버 옵션에 넣으면 정확히 그 pathname만 변경합니다. 공개 데모는 샘플 API 하나만 허용합니다. 경로는 기본적으로 origin을 구분하지 않습니다.
+
+## 자동 전달과 새로고침
+
+브라우저의 Service Worker만으로 서버 프로세스의 fetch를 가로챌 수는 없습니다. 이 패키지는 워커·별도 동기화 API·서버 저장소 없이 브라우저와 서버의 시작 지점을 연결하고 **작은 JSON 상태를 세션 쿠키로 전달**합니다.
+
+| 항목 | 동작 |
+| --- | --- |
+| 기본 브라우저 모드 | 직접 입력한 JSON은 메모리 전용. 새로고침하면 사라짐 |
+| `ssr: true` | JSON과 선택한 feature key를 쿠키에 기록, 새 서버 요청에 적용, 브라우저에서도 복원 |
+| 기본 갱신 | 변경을 50ms 동안 모아 한 번 `location.reload()` 실행 |
+| 앱의 갱신 사용 | `refresh: () => router.refresh()` 또는 앱의 invalidate/refetch 함수로 대체 |
+| 해제 | `test.reset(path)`는 해당 직접 입력 제거, `test.clear()`는 모든 입력·선택 해제 |
+| 수명 | 새로고침 후에도 유지. 같은 브라우저의 탭이 쿠키 공유. 다른 세션은 분리 |
+| 크기 | 전체 상태를 URL 인코딩한 뒤 최대 **3,500바이트**. 초과하면 기존 상태를 보존하고 오류 |
+
+동기화 쿠키는 기본 `test-mode.entries.ssr`, `Path=/`, `SameSite=Lax`이며 HTTPS에서는 Secure를 설정합니다. 브라우저·서버의 `cookieKey`가 같아야 합니다. 같은 origin의 서버 요청에 전달되며 다른 도메인으로 자동 동기화하지 않습니다. 브라우저 정책상 쿠키를 쓸 수 없으면 SSR 설치가 오류를 내고 fetch/콘솔 설치를 시작하지 않습니다.
+
+값을 전달하므로 새로고침으로 지우지 않습니다. 테스트를 끝낼 때 `test.clear()`를 사용하세요. 다른 탭에서 바꾼 값은 새 요청/새로고침에 반영되며, 모든 탭을 실시간으로 새로고침하는 기능은 아닙니다. 쿠키에는 코드나 함수를 저장하지 않고 유효한 JSON만 허용합니다. 큰 응답은 필요한 필드만 `patch`하거나 파일에 정의해 key만 전달하세요.
+
+## 요청 분리와 캐시
+
+Node 래퍼는 AsyncLocalStorage로 요청별 runtime을 분리합니다. Next 어댑터는 요청 headers 객체를 기준으로 상태를 분리합니다. 선택·직접 입력·호출 횟수가 다른 요청에 섞이지 않습니다. 들어온 인증 쿠키는 외부 API로 자동 복사하지 않습니다. 직접 작성한 handler가 캡처한 전역 변수는 앱이 관리합니다.
+
+Next가 시작 중 fetch를 다시 설치해도 현재 fetch를 감싸며, 테스트 응답 변경은 **Next fetch 캐시 바깥**에서 적용합니다. Mock은 원래 fetch를 호출하지 않습니다. Patch는 Next가 반환한 실제 응답에만 변경을 적용합니다. 설치는 Node instrumentation에서 한 번 수행하세요. 이미 다른 라이브러리가 fetch 접근자 자체를 설치한 경우 명확한 오류를 냅니다.
+
+활성 Next 어댑터는 요청 쿠키를 읽으므로 연결한 fetch가 실행되는 렌더는 요청 문맥을 필요로 합니다. 기본 생성 설정은 개발 환경 전용입니다. `use cache`, 별도 메모이제이션, 정적 생성, CDN에 저장된 HTML처럼 **fetch까지 도달하지 않는 결과**는 바꾸지 않습니다. 공유 QA 배포를 구성한다면 해당 결과 캐시를 앱에서 제외하세요. Node 래퍼는 테스트가 선택된 요청에 `Cache-Control: private, no-store`를 설정합니다. 이후 앱이 덮어쓰는 헤더까지 강제하지는 않습니다.
+
+DB 직접 조회·XHR·WebSocket·Edge 런타임은 자동 연결 대상이 아닙니다. 다른 Node 프레임워크는 현재 요청의 고유 객체와 쿠키를 제공하는 `installServerTestMode({ getRequest })`로 연결하거나 아래 수동 어댑터를 사용할 수 있습니다.
+
+## 파일에 공유 시나리오 남기기
+
+```ts
+// src/test-mode/catalog.ts — 앱 소유의 테스트 폴더
 import { definePatch, defineStory } from '@uiwwsw/test-mode/core';
 
 export const catalog = {
-  storageKey: 'my-app.qa', // 기본 cookieKey도 이 값. 양쪽에서 일치해야 합니다.
   patchDefinitions: [
     definePatch<unknown, { total: number }>('/api/cart',
       data => ({ ...data, total: 9.99 }),
@@ -68,52 +129,33 @@ export const catalog = {
 };
 ```
 
-브라우저에는 `createTestMode({ ...catalog, enabled: true })`와 콘솔/오버레이를 앱의 개발 환경에서 설치합니다. 서버에도 같은 catalog를 전달합니다. 공유 파일에는 서버 비밀값이나 브라우저에서만 존재하는 DOM 코드를 넣지 마세요.
+브라우저 `setupTestMode({ ...catalog, enabled: ..., ssr: true })`, 서버 `setupNextTestMode(catalog)` 또는 `withTestMode(app, catalog)`에 같은 정의를 전달합니다. 이후 `test.story('cart.discount')`로 선택합니다. 서버·브라우저가 함께 import하므로 이 카탈로그에는 서버 비밀값이나 DOM 전용 코드를 넣지 마세요.
 
-```js
-// Console — 서버에도 등록된 동작을 선택하고 서버 렌더 다시 요청
-test.story('cart.discount');
-location.reload();
-```
+## 필요한 조회만 수동 연결하기
 
-쿠키는 해당 도메인·경로와 브라우저의 쿠키 정책에 따라 전송됩니다. 다른 도메인의 SSR 서버로 자동 공유되지는 않습니다. 쿠키 저장이 차단된 환경에서는 CSR 메모리 fallback은 가능해도 이 SSR 연결은 동작하지 않습니다. 같은 origin의 탭은 시나리오 선택 쿠키를 공유합니다. 임시 JSON과는 수명이 다릅니다.
+기존 `createServerTestMode()`는 전역 fetch를 변경하지 않는 요청별 factory로 유지합니다.
 
-## Next.js App Router 연결 예
-
-```tsx
-// app/cart/page.tsx — Server Component
-import { cookies } from 'next/headers';
+```ts
 import { createServerTestMode } from '@uiwwsw/test-mode/server';
-import { catalog } from '@/test-mode/catalog';
 
-export default async function CartPage() {
+export async function loadCart(request: Request) {
   const { fetch: serverFetch } = createServerTestMode({
-    ...catalog,
     enabled: process.env.NODE_ENV === 'development',
-    cookieHeader: (await cookies()).toString(),
-    originalFetch: fetch,
+    cookieHeader: request.headers.get('cookie'),
+    ssr: true, // 직접 JSON 전달을 허용. 생략하면 기존 등록 시나리오 선택만 읽음
   });
-  const response = await serverFetch('https://api.example.com/api/cart', {
-    cache: 'no-store',
-  });
-  if (!response.ok) return <p>Cart could not be loaded.</p>;
-  const cart = await response.json();
-  return <p>Total: {cart.total}</p>;
+  return (await serverFetch('https://api.example.com/api/cart')).json();
 }
 ```
 
-콘솔 설치는 별도 Client Component에서 수행합니다. 서버 조회는 위의 `serverFetch`를 사용해야 합니다. `cookies()`는 요청 시점의 값을 읽고, 위 예제의 `cache: 'no-store'`는 실제 upstream 조회를 요청마다 수행하도록 지정합니다. 앱이나 CDN이 최종 HTML을 별도로 공유 캐시하면 테스트 값이 섞일 수 있으므로 해당 개발·QA 경로는 공유 캐시에서 제외하세요. `use cache` 등으로 런타임이나 결과를 요청 밖에 보관하지 마세요.
+요청 handler/loader 안에서 만들고 결과를 여러 요청이 공유하는 전역에 저장하지 마세요. 서버 코드에서 `runtime.setMock()` / `runtime.setPatch()`를 호출할 수도 있습니다. 이 factory는 브라우저 사용을 거부합니다. outgoing Cookie는 시나리오를 재선택하지 않습니다. 저수준 `createMockFetch(runtime, { cookieHeader: false })`도 이 요청 전용 동작을 제공합니다.
 
-이미 캐시된 데이터를 건너뛰는 경로나 빌드 시 생성된 페이지에는 어댑터가 호출되지 않습니다. 새 서버 렌더 요청만으로 모든 프레임워크 캐시가 무효화되는 것은 아닙니다. 브라우저와 서버의 첫 데이터가 다르면 hydration 불일치가 생길 수 있으므로 서버 결과를 초기 클라이언트 상태에 전달하는 앱의 기존 방식을 따르세요.
-
-이 스니펫은 연결 패턴입니다. 저장소의 실행 검증은 Node HTTP SSR 예제와 Chromium에서 수행하며 모든 Next.js 버전·캐시 설정을 인증하는 것은 아닙니다. API 근거: [Server / Client Components](https://nextjs.org/docs/app/getting-started/server-and-client-components), [cookies](https://nextjs.org/docs/app/api-reference/functions/cookies), [server fetch](https://nextjs.org/docs/app/api-reference/functions/fetch).
-
-## 바로 실행해서 확인
+## 로컬 데모 실행
 
 ```bash
 npm ci
 npm run dev:ssr
-# http://127.0.0.1:4176
+# http://127.0.0.1:4176/auto
 ```
 
-[SSR 예제](../examples/server)는 실제 HTTP 응답을 서버에서 조회한 뒤 HTML에 가격을 넣습니다. Console에서 `test.story('cart.discount'); location.reload()`를 실행하면 원본 HTML도 9.99가 됩니다. 별도 브라우저 세션의 가격은 42로 유지됩니다. `test.patch('/api/cart', { total: 123 })`로 직접 넣은 값은 클라이언트 fetch에만 적용되고 SSR HTML에는 전달되지 않습니다.
+서버가 원래 API를 fetch하고 JSON을 HTML에 넣습니다. 콘솔에서 직접 값을 바꾸면 HTML 원문도 바뀝니다. `/`에는 이전의 수동 시나리오 선택 예제를 남겨 호환성을 검사합니다.

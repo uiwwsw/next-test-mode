@@ -308,7 +308,7 @@ export const installConsole = (
       "test.patch('/api/cart', { total: 9.99 })":
         "Shallow-merge fields into the real GET response.",
       "test.overrides()":
-        "Inspect temporary response overrides (not persisted).",
+        "Inspect response overrides (memory by default; shared when SSR sync is enabled).",
       "test.reset('/api/cart')":
         "Remove this path's overrides and restore the selected scenario or real API.",
       "test.feat.add('path:caseKey')": "Enable one feature entry.",
@@ -343,7 +343,7 @@ export const installConsole = (
       "test.clear()",
     ],
     summary:
-      "Override browser API responses with mock/patch, or select registered scenarios with story. Temporary values stay in this runtime; SSR needs a server adapter and a new render. Use clear to reset.",
+      "Override API responses with mock/patch, or select registered scenarios with story. Browser setup with ssr: true shares values with a connected server and refreshes the page. Default values stay in memory. Use clear to reset.",
   });
   const run = (input?: string) =>
     typeof input === "string" && input.trim() ? apply(input) : help();
@@ -511,7 +511,7 @@ export const installTestModeOverlay = (
         extensions.some((extension) => extension.isActive()));
     if (visible) {
       for (const element of [documentRef.documentElement, documentRef.body]) {
-        if (element && !markers.has(element)) {
+        if (datasetName !== false && element && !markers.has(element)) {
           markers.set(
             element,
             installProperty(element.dataset, datasetName, {
