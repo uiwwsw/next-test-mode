@@ -2,33 +2,40 @@
 
 ```bash
 npm ci
-npm run ci                  # 타입, 런타임 회귀 테스트, 실제 tarball 설치 검증
 npx playwright install chromium
-npm run test:next            # 실제 Next.js 앱에 tarball/CLI 설치 및 자동 SSR 검증
-npm run test:browser        # 실제 Chromium에서 콘솔·fetch·overlay 검증
-npm pack                    # dist를 새로 빌드하고 설치 가능한 tgz 생성
+npm run ci
+npm run test:browser
+npm run test:next
+npm run test:demo
+npm pack
 ```
 
-GitHub Actions는 PR과 main에서 Node.js 18.17 / 20 / 22 / 24 및 Chromium·Next.js 16.3.5 자동 SSR 연결을 검증합니다. 패키지 검사에는 외부 소비자 프로젝트에서의 ESM import, 타입이 있는 handler, 복사한 스타터의 TypeScript 컴파일이 포함됩니다.
+PR/main CI는 Node.js 20.9 / 22 / 24, Chromium, 실제 Next.js 16.3.5를 검증합니다. tarball을 독립 앱에 설치해 ESM·타입·스타터·CLI를 확인합니다. Next fixture는 dev, production의 SSR·SSG·ISR·force-static·생성 경로·unstable_cache, Cache Components/use cache, 비활성 production을 각각 검사합니다. 공개 데모도 네 렌더 모드와 모바일 JSON 입력을 검사합니다.
 
-배포는 **GitHub Release 발행** 또는 **Publish 워크플로의 기존 tag 지정 실행**으로 시작됩니다. 저장소 secret `NPM_TOKEN`을 사용하며, 발행 권한과 CI에서의 비대화형 발행 권한이 있어야 합니다. 토큰은 publish 단계에만 전달합니다.
+## npm
 
-1. `npm version patch --no-git-tag-version` 등으로 package.json과 package-lock.json 버전을 함께 올립니다.
-2. 검증된 변경을 main에 반영한 뒤 그 main 커밋에 버전 tag를 만들고 push합니다.
-3. 해당 `vX.Y.Z` tag로 GitHub Release를 발행합니다.
-4. 전체 CI 통과, tag와 package 버전 일치, main에 포함된 커밋인지 확인 후 npm에 provenance와 함께 발행합니다.
+GitHub Release 발행 또는 Publish workflow에서 기존 tag를 지정하면 배포합니다. `NPM_TOKEN`에는 `@uiwwsw/next-test-mode` 발행 권한과 기존 `@uiwwsw/test-mode`의 이전 안내 설정 권한이 필요합니다. 토큰은 publish/deprecate 단계에만 전달합니다.
 
-정식 버전은 `latest`, `1.2.0-beta.1` 같은 사전 버전은 `next`로 발행합니다. 수동 실행도 main에 포함된 기존 버전 tag가 필요합니다. 임의 브랜치 HEAD는 배포하지 않습니다. 재실행 시 동일 커밋의 발행 완료 버전은 건너뛰고, 레지스트리 확인은 반영 지연을 고려해 10초 간격으로 최대 36회 재시도합니다.
+1. package.json과 package-lock.json 버전을 함께 갱신합니다.
+2. 검증된 변경을 main에 반영하고 그 커밋에 `vX.Y.Z` 태그를 만듭니다.
+3. 같은 태그로 GitHub Release를 발행합니다.
+4. 전체 CI, 태그·버전 일치, main 포함 여부를 통과하면 npm provenance와 함께 발행합니다.
+5. 레지스트리에서 버전·커밋·무결성·provenance를 확인한 다음, 기존 패키지에 새 이름과 이전 가이드를 안내합니다. 기존 버전은 삭제하지 않습니다.
 
-최초 발행 후 토큰 없이 배포하려면 npm의 [Trusted publishing](https://docs.npmjs.com/trusted-publishers/)에 GitHub user `uiwwsw`, repository `test-mode`, workflow `publish.yml`, environment `npm`을 등록하고 직접 `npm publish`를 허용하세요. 워크플로에는 OIDC 권한이 준비되어 있습니다.
+정식 버전은 `latest`, 사전 버전은 `next` 채널로 배포합니다. 동일 커밋으로 이미 발행했다면 건너뛰며, 다른 커밋의 동일 버전은 거부합니다. 레지스트리 반영은 최대 36회 재시도합니다. 성공 후 일반 `npm view`와 새 소비자 설치로도 확인하세요.
 
+npm [Trusted publishing](https://docs.npmjs.com/trusted-publishers/)을 설정한다면 GitHub user `uiwwsw`, repository **`next-test-mode`**, workflow `publish.yml`, environment `npm`을 사용합니다. 워크플로의 OIDC 권한은 준비되어 있습니다.
 
-## 문서 이미지 갱신
+## Vercel
 
-`npm run docs:assets`는 작동하는 로컬 예제를 Chromium에서 촬영합니다. 개발 환경에 Python 3과 Pillow가 필요합니다. 생성된 PNG/GIF는 GitHub에서 제공하고 npm tarball에는 포함하지 않습니다.
+공개 데모: [CSR](https://test-mode-tau.vercel.app/csr) · [SSR](https://test-mode-tau.vercel.app/ssr) · [ISR](https://test-mode-tau.vercel.app/isr) · [SSG](https://test-mode-tau.vercel.app/ssg).
 
-## Vercel 데모
+저장소를 Import하고 Root Directory를 `./`로 둡니다. `vercel.json`은 **Next.js**, `npm run build:demo`, `.next` 출력을 지정합니다. 기존 프로젝트의 UI에 별도 빌드/출력 override가 있다면 이 값과 맞추세요. GitHub 저장소 이름은 `next-test-mode`이며 데모 도메인은 그대로입니다.
 
-공개 주소: [CSR 데모](https://test-mode-tau.vercel.app/) · [SSR 데모](https://test-mode-tau.vercel.app/api/ssr)
+데모는 루트 `app/`의 실제 Next 앱입니다. `instrumentation.js`와 `instrumentation-client.js`가 로컬 패키지 빌드를 연결하고, 공개 샘플 `/api/cart.json`만 서버 테스트 대상으로 허용합니다. 샘플 데모에는 환경 변수가 필요하지 않습니다. 사용자 앱에 생성하는 설정은 기본 development 전용입니다.
 
-Vercel에서 이 GitHub 저장소를 Import하고 Root Directory를 `./`로 둡니다. `vercel.json`에 Other 프레임워크, `npm run build:demo`, `demo-dist` 출력이 지정되어 있습니다. CSR 정적 파일과 `api/ssr.mjs` Node 함수를 함께 배포합니다. SSR 함수가 사용하는 `dist`도 같은 빌드에서 생성됩니다. 데모에는 환경 변수가 필요하지 않습니다. 연결 후 main 변경이 데모의 자동 배포를 시작합니다. npm 패키지 발행은 기존 GitHub Release / NPM_TOKEN 절차를 그대로 사용합니다.
+루트와 `/ssg`는 정적 생성, `/isr`은 60초 재검증, `/ssr`은 매 요청 렌더, `/csr`은 브라우저 fetch입니다. 빌드 시 공개 데모의 샘플 JSON을 가져오므로 최초 도메인 이전 때는 `demo-components/load-cart.js`의 샘플 주소도 확인하세요. 구 `/api/ssr` 주소는 `/ssr`로 안내합니다.
+
+## 문서 이미지
+
+`npm run docs:assets`는 Next production 데모를 Chromium으로 촬영하고 README의 PNG/GIF를 만듭니다. Python 3과 Pillow가 필요합니다. 이미지는 GitHub 릴리스 태그의 절대 URL로 제공하며 npm tarball에는 넣지 않습니다. README 이미지 URL의 태그도 새 릴리스에 맞추세요.

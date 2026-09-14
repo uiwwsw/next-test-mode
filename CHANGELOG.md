@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0 — Next Test Mode
+
+- Rename the npm package to `@uiwwsw/next-test-mode` and repository to `uiwwsw/next-test-mode`; retain the old package for existing installs and document migration.
+- Add Next App Router Draft Mode coordination with unchanged fetch call sites: CSR, SSR, SSG, ISR, force-static, generated routes and cached fetch previews.
+- Generate server/client instrumentation plus a guarded Draft POST route; migrate unchanged 0.5.0 hooks with `init --migrate`. Production stays disabled unless explicitly enabled for QA.
+- Isolate request state and control/authorization fetches; serialize rapid Console changes, preserve pre-existing CMS Draft sessions and restore ordinary caches on clear.
+- Replace the public demo with a real Next.js app featuring four render modes, Console/JSON editing, HTTP errors and mobile layouts.
+- Add production, Cache Components and disabled-build integration checks. Document the version-sensitive Draft provider bridge, Next 16.3.5 compatibility and Node 20.9 minimum.
+
+
 ## 0.5.0 — 2026-09-14
 
 - Keep existing browser and server `fetch()` call sites: one-call browser setup, a Node request wrapper, and a Next.js 16 Node instrumentation adapter.

@@ -2,23 +2,21 @@ import { chromium, expect } from "@playwright/test";
 import { spawn, execFileSync } from "node:child_process";
 import { mkdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-
 const output = resolve("docs/assets");
 const frames = resolve("test-results/doc-frames");
 await mkdir(frames, { recursive: true });
-const server = spawn(process.execPath, ["scripts/serve-example.mjs"], {
-  env: { ...process.env, PORT: "4174" },
-  stdio: ["ignore", "pipe", "inherit"],
-});
+const server = spawn(
+  process.execPath,
+  ["node_modules/next/dist/bin/next", "start", "-H", "127.0.0.1", "-p", "4174"],
+  { stdio: ["ignore", "pipe", "inherit"] },
+);
 let browser;
 try {
-  await new Promise((resolveReady, reject) => {
-    server.once("error", reject);
-    server.once("exit", (code) =>
-      reject(new Error(`Example server exited: ${code}`)),
-    );
-    server.stdout.on("data", (chunk) => {
-      if (chunk.toString().includes("Example ready")) resolveReady();
+  await new Promise((ok, fail) => {
+    server.once("error", fail);
+    server.once("exit", (code) => fail(new Error(`Next exited: ${code}`)));
+    server.stdout.on("data", (data) => {
+      if (data.toString().includes("Ready")) ok();
     });
   });
   browser = await chromium.launch();
@@ -35,38 +33,48 @@ try {
   });
   await hero.close();
   const page = await browser.newPage({
-    viewport: { width: 1200, height: 1000 },
+    viewport: { width: 1200, height: 1100 },
     deviceScaleFactor: 1,
   });
-  await page.goto("http://127.0.0.1:4174/");
-  await expect(page.locator("#cart")).toContainText("$42.00");
+  await page.goto("http://127.0.0.1:4174/ssg");
+  const ready = () =>
+    expect(
+      page.getByRole("button", { name: "적용하고 화면 확인" }),
+    ).toBeEnabled();
   const capture = (name) =>
-    page.screenshot({ path: resolve(frames, `${name}.png`) });
+    page
+      .locator(".playground")
+      .screenshot({ path: resolve(frames, `${name}.png`) });
+  await ready();
+  await expect(page.locator("[data-demo-total]")).toHaveText("42");
   await capture("real");
-  await page.getByRole("button", { name: "적용하고 테스트 모드 켜기" }).click();
-  await expect(page.locator("#cart")).toContainText("$9.99");
-  await capture("patch");
-  await page.screenshot({ path: resolve(output, "playground.png") });
-  await page.getByRole("button", { name: "Mock 응답 전체 교체" }).click();
-  await page
-    .getByLabel("응답에 적용할 JSON")
-    .fill(
-      '{\n  "items": [{"name": "내가 만든 상품", "price": 3.14}],\n  "total": 3.14\n}',
-    );
-  await page.getByRole("button", { name: "적용하고 테스트 모드 켜기" }).click();
-  await expect(page.locator("#cart")).toContainText("$3.14");
-  await capture("custom");
-  await page
-    .getByLabel("응답에 적용할 JSON")
-    .fill('{\n  "message": "직접 입력한 오류 메시지"\n}');
-  await page.locator("#mock-status").fill("503");
-  await page.getByRole("button", { name: "적용하고 테스트 모드 켜기" }).click();
-  await expect(page.locator("#http-status")).toHaveText(
-    "503 Service Unavailable",
+  await page.evaluate(() =>
+    window.test.patch("/api/cart.json", { total: 9.99 }),
   );
+  await expect(page.locator("[data-demo-total]")).toHaveText("9.99");
+  await ready();
+  await capture("patch");
+  await page.screenshot({
+    path: resolve(output, "playground.png"),
+    fullPage: true,
+  });
+  await page.goto("http://127.0.0.1:4174/ssr");
+  await ready();
+  await expect(page.locator("[data-demo-total]")).toHaveText("9.99");
+  await capture("server");
+  await page.evaluate(() =>
+    window.test.mock(
+      "/api/cart.json",
+      { message: "Try again" },
+      { status: 503 },
+    ),
+  );
+  await expect(page.getByText("HTTP 503", { exact: true })).toBeVisible();
+  await ready();
   await capture("error");
-  await page.getByRole("button", { name: "원래 응답", exact: true }).click();
-  await expect(page.locator("#cart")).toContainText("$42.00");
+  await page.evaluate(() => window.test.clear());
+  await expect(page.locator("[data-demo-total]")).toHaveText("42");
+  await ready();
   await capture("reset");
   execFileSync(
     "python3",
@@ -76,8 +84,12 @@ try {
 from PIL import Image
 from pathlib import Path
 import sys
-frames = [Image.open(Path(sys.argv[1]) / (name + '.png')).convert('RGB') for name in ['real', 'patch', 'custom', 'error', 'reset']]
-frames[0].save(sys.argv[2], save_all=True, append_images=frames[1:], duration=[1800,3000,3000,2600,1800], loop=0, optimize=True)
+frames=[Image.open(Path(sys.argv[1])/(name+'.png')).convert('RGB') for name in ['real','patch','server','error','reset']]
+w=max(f.width for f in frames); h=max(f.height for f in frames)
+normalized=[]
+for frame in frames:
+ canvas=Image.new('RGB',(w,h),'#f6f8f4'); canvas.paste(frame,(0,0)); normalized.append(canvas)
+normalized[0].save(sys.argv[2],save_all=True,append_images=normalized[1:],duration=[1800,2600,2600,2400,1800],loop=0,optimize=True)
 `,
       frames,
       resolve(output, "scenarios.gif"),
@@ -85,7 +97,7 @@ frames[0].save(sys.argv[2], save_all=True, append_images=frames[1:], duration=[1
     { stdio: "inherit" },
   );
   console.log(
-    "Rendered hero.png, playground.png and scenarios.gif from the working example.",
+    "Rendered Next Test Mode hero, real production playground and animated SSG/SSR Console demo.",
   );
 } finally {
   await browser?.close();

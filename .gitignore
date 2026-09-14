@@ -11,3 +11,7 @@ playwright-report/
 test-results/
 demo-dist/
 .vercel/
+
+.next/
+next-env.d.ts
+public/
