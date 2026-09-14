@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/uiwwsw/test-mode/v0.3.0/docs/assets/hero.png" width="100%" alt="test mode — Your app. Every API state. API mocks, response patches, and repeatable QA scenarios." />
+  <img src="https://raw.githubusercontent.com/uiwwsw/test-mode/v0.4.1/docs/assets/hero.png" width="100%" alt="test mode — Same API calls. Your test data. Keep scenarios separate and change response values from the console." />
 </p>
 
 <p align="center">
-  <strong>콘솔에서 원하는 응답을 넣고, 실제 화면을 확인하세요.</strong><br />
-  Console-first API response overrides for UI debugging.
+  <strong>호출 코드는 그대로. 테스트 데이터는 따로. 확인은 콘솔에서.</strong><br />
+  Keep your API calls. Isolate your scenarios. Try data from the console.
 </p>
 
 <p align="center">
@@ -26,35 +26,40 @@
 
 ---
 
-**test mode는 콘솔에서 API 응답을 바꿔 실제 UI 상태를 재현하는 개발·QA 도구입니다.** 브라우저 `fetch`가 앱에 전달하는 데이터를 교체(Mock)하거나 일부 수정(Patch)합니다. 서버의 데이터베이스나 이미 렌더링된 HTML을 수정하는 도구는 아닙니다.
+**test mode는 기존 API 호출 흐름으로 다양한 화면 상태를 확인하는 개발·QA 도구입니다.** 콘솔에서 브라우저 `fetch` 응답을 교체하거나 일부 값을 바꿔, 빈 목록·할인·서버 오류를 실제 앱에서 재현합니다.
 
-로그인 잠금, 빈 장바구니, 일시적인 서버 오류를 직접 입력해 확인하세요. 반복해서 쓸 API 동작은 feature로 정의하고, 팀이 공유할 시나리오는 story로 묶습니다.
+## Why test mode
 
-| Mock | Patch | Story |
+| 호출 코드는 그대로 | 테스트 데이터는 따로 | 확인은 콘솔에서 |
 | :--- | :--- | :--- |
-| 요청 전에 응답을 만듭니다. | 실제 응답의 일부를 바꿉니다. | 여러 API 동작을 하나로 선택합니다. |
-| 빈 목록 · HTTP 오류 · 특정 계정 상태 | 실제 상품 + 테스트 할인 · 재고 변경 | `cart.empty` · `auth.login.locked` |
+| 앱 시작 시 한 번 연결하면 기존 `fetch()` 호출을 계속 사용합니다. 호출부마다 테스트 전용 함수나 조건 분기를 추가할 필요가 없습니다. | 한 번 확인할 값은 임시 테스트로 끝내고, 반복할 동작은 `src/test-mode/` 같은 전용 폴더에 모아 수정하고 공유합니다. | `test.patch()` 한 줄로 가격을 바꾸고, `test.mock()`으로 빈 목록이나 오류 응답을 넣습니다. `test.clear()`로 원래 응답에 복귀합니다. |
 
-## CSR and SSR
+**앱의 호출 코드는 이대로 둡니다.**
 
-지원 여부는 프레임워크 이름보다 **데이터를 가져오는 위치와 연결한 어댑터**에 따라 달라집니다.
+```ts
+// src/api/cart.ts — 평소에도, 테스트할 때도 같은 호출
+export async function getCart() {
+  const response = await fetch('/api/cart');
+  return response.json();
+}
+```
 
-| 데이터가 오는 곳 | 지원 범위 |
-| :--- | :--- |
-| 브라우저 `fetch` · CSR | 콘솔 `test.mock()` / `test.patch()`로 다음 응답을 변경합니다. 앱이 다시 요청해야 UI에 반영됩니다. |
-| SSR · Server Component · 서버 loader | 서버에 `createServerTestMode()`를 연결하면 가능합니다. 등록된 시나리오 선택을 쿠키로 전달하고 새 서버 렌더에서 적용합니다. |
-| 브라우저에서 직접 입력한 임시 JSON → SSR | 자동 전송하지 않습니다. 브라우저와 서버는 별도 런타임입니다. |
-| 이미 받은 HTML · 앱 캐시 · 빌드 시 생성한 정적 페이지 | 소급해서 변경하지 않습니다. 앱의 재요청·캐시 갱신 또는 새로운 서버 렌더가 필요합니다. |
-| 서버의 DB 조회 · XHR · WebSocket | 기본 fetch 어댑터의 대상이 아닙니다. 데이터 접근 경계에 별도 연결이 필요합니다. |
+**바꿔보고 싶은 값만 Console에 입력합니다.**
 
-`test mode`는 테스트 응답을 적용한 앱의 활성 상태를 뜻합니다. 이 도구는 UI 디버깅을 돕고, 자동 테스트의 실행과 판정은 별도의 테스트 실행기가 담당합니다.
+```js
+test.patch('/api/cart', { total: 9.99 }); // 실제 상품은 유지하고 가격만 변경
+// 앱이 getCart()를 다시 호출하면 변경된 데이터를 받습니다.
+test.clear(); // 다음 호출부터 원래 응답
+```
+
+호출부 유지 설명은 **브라우저 fetch를 초기화 시 연결한 뒤**의 동작입니다. SSR은 서버 데이터 조회에 별도 어댑터를 연결합니다. [CSR / SSR 지원 범위](#csr-and-ssr).
 
 ## See it in action
 
 **[라이브 데모 열기 →](https://test-mode-tau.vercel.app/)** 로그인이나 설치 없이 콘솔·JSON 입력으로 직접 바꿔보세요.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/uiwwsw/test-mode/v0.3.0/docs/assets/scenarios.gif" width="880" alt="실제 실행 데모: JSON 입력으로 가격을 변경하고, 직접 만든 상품을 mock하고, HTTP 오류를 적용한 뒤 원래 응답으로 복귀합니다." />
+  <img src="https://raw.githubusercontent.com/uiwwsw/test-mode/v0.4.1/docs/assets/scenarios.gif" width="880" alt="같은 API 호출로 테스트 데이터를 바꾸는 실제 데모: 가격 변경, 직접 만든 상품, HTTP 오류, 원래 응답 복귀." />
 </p>
 
 **Console에서 값을 입력 → 테스트 모드 활성화 → 실제 앱 갱신.** `test.patch()`로 가격을 바꾸거나 `test.mock()`으로 상품·오류 응답을 직접 넣어보세요. JSON 편집기에서도 같은 API를 실행할 수 있습니다.
@@ -69,7 +74,7 @@
 npm install @uiwwsw/test-mode
 ```
 
-**1. 개발 환경에서 fetch와 콘솔을 연결합니다.** Vite 앱의 클라이언트 초기화 예제입니다.
+**1. 앱 시작 시 한 번 연결합니다.** 이 설치 코드를 개발 환경의 클라이언트 초기화 지점에 두면, 기존 브라우저 fetch 호출부는 그대로 사용합니다. Vite 앱 예제입니다.
 
 ```ts
 import {
@@ -100,6 +105,39 @@ test.clear();           // 임시 값·시나리오 모두 끄기
 기본 대상은 **GET + 정확한 pathname**입니다. POST 등은 세 번째 인자에 `{ method: 'POST' }`를 전달합니다. Patch는 객체의 최상위 필드를 덮어쓰며 중첩 객체와 배열은 통째로 교체합니다. 임시 값은 저장하지 않고 선택된 시나리오보다 우선 적용합니다. [자세한 동작](https://github.com/uiwwsw/test-mode/blob/main/docs/guide.md#직접-응답-값-넣기).
 
 > `enabled`는 Node의 `development` / `test` 환경에서만 기본 활성화됩니다. 브라우저에서는 앱의 개발 환경 조건을 명시하세요. 팀이 공유할 동작은 `defineMock` / `definePatch`로 등록하고 `defineStory`로 묶을 수 있습니다.
+
+## Try once, or keep it in a folder
+
+**한 번 확인할 테스트는 콘솔에서 끝내세요.** `test.mock()` / `test.patch()`에 넣은 값은 메모리에만 남고, `test.clear()`나 새로고침으로 사라집니다. 임시 실험을 위해 파일을 만들거나 API 호출부를 고칠 필요가 없습니다.
+
+**다시 쓸 테스트는 별도 폴더에서 관리하세요.** 빈 목록·로그인 잠금·할인 같은 반복 시나리오는 앱 소유의 파일로 남깁니다. 화면 코드와 별도로 수정하고 코드 리뷰하거나 팀에 공유할 수 있습니다.
+
+```text
+src/
+  api/cart.ts                  # 기존 API 호출 코드
+  test-mode/
+    config.ts                  # 개발 환경 설정
+    index.ts                   # 테스트 정의 등록
+    install.ts                 # 앱 시작 시 한 번 연결
+    features/cart.ts           # API별 mock / patch와 테스트 데이터
+    stories/cart.stories.ts    # 여러 API를 묶은 화면 시나리오
+```
+
+폴더의 동작을 등록한 뒤에는 `test.story('cart.empty')`처럼 콘솔에서 선택합니다. [스타터 템플릿](https://github.com/uiwwsw/test-mode/tree/main/templates/test-mode)을 복사해 시작할 수 있습니다. 임시 JSON은 저장하지 않으며, 등록된 시나리오의 **선택 상태**는 쿠키/localStorage에 유지됩니다.
+
+## CSR and SSR
+
+지원 여부는 **데이터를 가져오는 위치와 연결한 어댑터**에 따라 달라집니다.
+
+| 데이터가 오는 곳 | 지원 범위 |
+| :--- | :--- |
+| 브라우저 `fetch` · CSR | 콘솔 `test.mock()` / `test.patch()`로 다음 응답을 변경합니다. 앱이 다시 요청해야 UI에 반영됩니다. |
+| SSR · Server Component · 서버 loader | 서버에 `createServerTestMode()`를 연결하면 가능합니다. 등록된 시나리오 선택을 쿠키로 전달하고 새 서버 렌더에서 적용합니다. |
+| 브라우저에서 직접 입력한 임시 JSON → SSR | 자동 전송하지 않습니다. 브라우저와 서버는 별도 런타임입니다. |
+| 이미 받은 HTML · 앱 캐시 · 빌드 시 생성한 정적 페이지 | 소급해서 변경하지 않습니다. 앱의 재요청·캐시 갱신 또는 새로운 서버 렌더가 필요합니다. |
+| 서버의 DB 조회 · XHR · WebSocket | 기본 fetch 어댑터의 대상이 아닙니다. 데이터 접근 경계에 별도 연결이 필요합니다. |
+
+`test mode`는 테스트 응답을 적용한 앱의 활성 상태를 뜻합니다. 이 도구는 UI 디버깅을 돕고, 자동 테스트의 실행과 판정은 별도의 테스트 실행기가 담당합니다.
 
 ## Server rendering
 

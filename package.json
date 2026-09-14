@@ -1,7 +1,7 @@
 {
   "name": "@uiwwsw/test-mode",
-  "version": "0.4.0",
-  "description": "Console-first API response overrides for UI debugging: browser fetch mocks and patches, shared scenarios, and request-scoped SSR integration.",
+  "version": "0.4.1",
+  "description": "Keep browser fetch calls unchanged, isolate reusable test scenarios in your own folder, and try API response data from the console.",
   "type": "module",
   "packageManager": "npm@11.16.0",
   "license": "MIT",
