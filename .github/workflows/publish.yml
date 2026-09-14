@@ -94,6 +94,17 @@ jobs:
               assert.equal(published.gitHead, head);
               assert.ok(published.dist?.integrity, 'Missing package integrity');
               assert.ok(published.dist?.attestations?.provenance, 'Missing provenance');
+              // npm install resolves the package index, which can lag behind
+              // an exact-version endpoint after the first publication.
+              const indexResponse = await fetch(`https://registry.npmjs.org/${name.replace('/', '%2f')}?verify=${Date.now()}`, { signal: AbortSignal.timeout(15000) });
+              if (!indexResponse.ok) throw new Error(`Package index returned HTTP ${indexResponse.status}`);
+              const index = await indexResponse.json();
+              assert.equal(index.name, name);
+              assert.equal(index.versions?.[version]?.gitHead, head, 'Version missing from installable package index');
+              assert.equal(index.versions?.[version]?.dist?.integrity, published.dist.integrity);
+              // Re-running an older release must not require moving latest backwards.
+              if (process.env.NPM_ALREADY_PUBLISHED !== 'true')
+                assert.equal(index['dist-tags']?.[process.env.NPM_DIST_TAG], version, 'npm distribution tag is not ready');
               console.log(`Verified ${name}@${version}: ${published.dist.integrity}`);
               break;
             } catch (error) {
