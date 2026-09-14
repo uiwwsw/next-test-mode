@@ -2,7 +2,8 @@ import type { TestMode } from "./core.js";
 import type { MockResult, TestModeRequest } from "./types.js";
 
 export type MockFetchOptions = Readonly<{
-  cookieHeader?: string | null;
+  /** A string fixes selection to that cookie. false uses runtime state, ignoring outgoing cookies. */
+  cookieHeader?: string | null | false;
   mapRequest?: (
     request: TestModeRequest,
   ) => Promise<TestModeRequest> | TestModeRequest;
@@ -36,7 +37,7 @@ const parseBody = async (body: BodyInit | null | undefined) => {
 const requestMetadata = (
   input: RequestInfo | URL,
   init: RequestInit | undefined,
-  cookieHeader?: string | null,
+  cookieHeader?: string | null | false,
 ): TestModeRequest => {
   const request = input instanceof Request ? input : undefined;
   const base =
@@ -49,7 +50,10 @@ const requestMetadata = (
   // RequestInit.headers replaces the Request headers, as native fetch does.
   const headers = new Headers(init?.headers ?? request?.headers);
   return {
-    cookieHeader: cookieHeader ?? headers.get("cookie"),
+    cookieHeader:
+      cookieHeader === false
+        ? undefined
+        : (cookieHeader ?? headers.get("cookie")),
     headers,
     method: (init?.method ?? request?.method ?? "GET").toUpperCase(),
     params: Object.fromEntries(url.searchParams.entries()),

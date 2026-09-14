@@ -4,6 +4,8 @@
 
 개발자 도구 → Console에서 값을 입력하면 실제 앱 미리보기가 즉시 바뀌는 데모입니다. 화면의 JSON 편집기도 동일한 패키지 API를 호출합니다.
 
+이 공개 데모는 **브라우저 fetch / CSR**을 보여줍니다. 임시 JSON을 서버로 전송하거나 SSR HTML을 수정하지 않습니다. 서버에서 실제 HTML을 생성하는 별도의 [SSR 실행 예제](../server)와 [CSR / SSR 연결 가이드](../../docs/server-rendering.md)를 참고하세요.
+
 ```js
 test.patch('/api/cart.json', { total: 9.99 });
 test.mock('/api/cart.json', {

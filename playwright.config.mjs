@@ -13,6 +13,11 @@ export default defineConfig({
       url: "http://127.0.0.1:4175/nested/",
       timeout: 15000,
     },
+    {
+      command: "node examples/server/server.mjs",
+      url: "http://127.0.0.1:4176",
+      timeout: 15000,
+    },
   ],
   testDir: "./tests/browser",
   fullyParallel: true,

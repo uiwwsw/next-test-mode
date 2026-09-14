@@ -99,6 +99,33 @@ test("console story controls fetch and page-aware overlay end to end", async ({
   ).toEqual({ fetch: true, history: true, consoleRemoved: true });
 });
 
+test("server factory rejects browser use before changing persistence or globals", async ({
+  page,
+}) => {
+  const result = await page.evaluate(() => {
+    const before = {
+      cookie: document.cookie,
+      storage: JSON.stringify(localStorage),
+      fetch: window.fetch,
+    };
+    let error;
+    try {
+      api.createServerTestMode({ enabled: true, cookieHeader: null });
+    } catch (caught) {
+      error = caught.message;
+    }
+    return {
+      error,
+      unchanged:
+        before.cookie === document.cookie &&
+        before.storage === JSON.stringify(localStorage) &&
+        before.fetch === window.fetch,
+    };
+  });
+  expect(result.error).toContain("must run on the server");
+  expect(result.unchanged).toBe(true);
+});
+
 test("one browser change emits one notification per runtime and persists cookies", async ({
   page,
 }) => {

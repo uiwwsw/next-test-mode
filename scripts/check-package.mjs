@@ -37,6 +37,8 @@ try {
     "dist/core.js",
     "dist/browser.js",
     "dist/fetch.js",
+    "dist/server.js",
+    "dist/server.d.ts",
     "dist/index.d.ts",
     "dist/types.d.ts",
     "src/types.ts",
@@ -111,6 +113,7 @@ try {
     const core = await import('@uiwwsw/test-mode/core');
     const browser = await import('@uiwwsw/test-mode/browser');
     const adapter = await import('@uiwwsw/test-mode/fetch');
+    const server = await import('@uiwwsw/test-mode/server');
     assert.equal(core.createTestMode, createTestMode);
     assert.equal(adapter.createMockFetch, createMockFetch);
     assert.equal(typeof browser.installConsole, 'function');
@@ -119,6 +122,9 @@ try {
     runtime.add('/api/packed');
     const fetch = createMockFetch(runtime, { originalFetch: () => { throw new Error('unexpected transport'); } });
     assert.deepEqual(await (await fetch('https://example.com/api/packed')).json(), { packed: true });
+    const scope = server.createServerTestMode({ enabled: true, cookieHeader: null });
+    scope.runtime.setMock('/api/packed', { server: true });
+    assert.deepEqual(await (await scope.fetch('https://example.com/api/packed', { headers: { Cookie: 'session=upstream' } })).json(), { server: true });
   `,
     ],
     temp,
@@ -142,7 +148,10 @@ try {
     const core: typeof import('@uiwwsw/test-mode').createTestMode = (await import('@uiwwsw/test-mode/core')).createTestMode;
     const adapter: typeof createMockFetch = (await import('@uiwwsw/test-mode/fetch')).createMockFetch;
     const browser: typeof import('@uiwwsw/test-mode').installConsole = (await import('@uiwwsw/test-mode/browser')).installConsole;
-    void [core, adapter, browser];
+    const server: typeof import('@uiwwsw/test-mode').createServerTestMode = (await import('@uiwwsw/test-mode/server')).createServerTestMode;
+    const scope = server({ cookieHeader: null, definitions: [mock], patchDefinitions: [patch] });
+    const serverFetch: typeof fetch = scope.fetch;
+    void [core, adapter, browser, serverFetch];
     void wrapped;
   `,
   );
