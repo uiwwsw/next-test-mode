@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="개발자 도구에서 API 응답을 직접 바꾸세요. test.mock, test.patch 한 줄로 켜지는 test mode의 라이브 데모."
+      content="콘솔에서 브라우저 API 응답을 바꿔 실제 UI 상태를 재현하세요. test.mock, test.patch로 동작하는 CSR 데모와 SSR 연결 가이드."
     />
     <title>test mode · 값을 바꾸고, 화면을 확인하세요</title>
     <link
@@ -28,9 +28,11 @@
       </header>
       <div class="intro">
         <div>
-          <p class="eyebrow">DEVTOOLS → API → YOUR UI</p>
+          <p class="eyebrow">BROWSER API RESPONSES → YOUR UI</p>
           <h1>원하는 값을 넣어보세요.</h1>
-          <p>콘솔 한 줄로 API 응답을 바꾸면, 오른쪽 앱이 바로 반응합니다.</p>
+          <p>
+            콘솔에서 브라우저 API 응답을 바꾸면, 오른쪽 앱이 바로 반응합니다.
+          </p>
         </div>
         <span id="runtime-state" class="runtime-state" role="status"
           >● Test mode 꺼짐</span
@@ -153,9 +155,14 @@
       </section>
       <footer>
         <p>
-          Mock은 네트워크 요청을 대신합니다. Patch는 샘플 JSON을 HTTP로 받은 뒤
-          변경합니다.<br />입력한 응답은 서버에 저장하지 않으며, 새로고침하면
-          초기화됩니다.
+          이 데모는 브라우저 fetch / CSR에 적용됩니다. Mock은 요청을 대신하고,
+          Patch는 실제 응답을 받은 뒤 변경합니다.<br />입력값은 서버로 전송하지
+          않으며 새로고침하면 초기화됩니다. SSR은 서버 연결과 새 렌더가
+          필요합니다.
+          <a
+            href="https://github.com/uiwwsw/test-mode/blob/main/docs/server-rendering.md"
+            >CSR · SSR 지원 범위 ↗</a
+          >
         </p>
         <a href="https://github.com/uiwwsw/test-mode/tree/main/examples/browser"
           >데모 소스 ↗</a

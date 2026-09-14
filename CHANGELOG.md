@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 — 2026-09-14
+
+- Define test mode as console-first API response overrides for UI debugging, with an explicit CSR/SSR support matrix and updated playground guidance.
+- Add `createServerTestMode` and the `./server` entry point: a fresh runtime and fetch per incoming server request, selected from registered cookie entries, with isolated counters and server-authored overrides.
+- Add `cookieHeader: false` to the fetch adapter so outgoing API authentication cookies cannot override an already captured request selection. Existing string/null behavior remains compatible.
+- Include a runnable Node HTTP SSR example, Next.js integration guidance, and browser-to-server cookie handoff tests. Temporary console JSON remains local to the browser.
+
 ## 0.3.1 — 2026-09-14
 
 - Link directly to the public Vercel playground from the README and demo documentation.

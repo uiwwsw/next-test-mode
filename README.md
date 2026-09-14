@@ -4,7 +4,7 @@
 
 <p align="center">
   <strong>콘솔에서 원하는 응답을 넣고, 실제 화면을 확인하세요.</strong><br />
-  Framework-neutral API scenarios for development &amp; QA.
+  Console-first API response overrides for UI debugging.
 </p>
 
 <p align="center">
@@ -18,6 +18,7 @@
   <a href="https://test-mode-tau.vercel.app/">Live demo ↗</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#see-it-in-action">Demo</a> ·
+  <a href="#csr-and-ssr">CSR / SSR</a> ·
   <a href="https://github.com/uiwwsw/test-mode/blob/main/docs/guide.md">사용 가이드</a> ·
   <a href="https://github.com/uiwwsw/test-mode/blob/main/docs/architecture.md">설계</a> ·
   <a href="https://github.com/uiwwsw/test-mode/blob/main/CHANGELOG.md">Changelog</a>
@@ -25,12 +26,28 @@
 
 ---
 
-로그인 잠금, 빈 장바구니, 일시적인 서버 오류. 매번 계정이나 서버 데이터를 바꾸지 않고, **앱의 실제 UI에서 필요한 상태를 재현**하세요. API 동작을 feature로 정의하고, 팀이 공유할 시나리오를 story로 묶습니다.
+**test mode는 콘솔에서 API 응답을 바꿔 실제 UI 상태를 재현하는 개발·QA 도구입니다.** 브라우저 `fetch`가 앱에 전달하는 데이터를 교체(Mock)하거나 일부 수정(Patch)합니다. 서버의 데이터베이스나 이미 렌더링된 HTML을 수정하는 도구는 아닙니다.
+
+로그인 잠금, 빈 장바구니, 일시적인 서버 오류를 직접 입력해 확인하세요. 반복해서 쓸 API 동작은 feature로 정의하고, 팀이 공유할 시나리오는 story로 묶습니다.
 
 | Mock | Patch | Story |
 | :--- | :--- | :--- |
 | 요청 전에 응답을 만듭니다. | 실제 응답의 일부를 바꿉니다. | 여러 API 동작을 하나로 선택합니다. |
 | 빈 목록 · HTTP 오류 · 특정 계정 상태 | 실제 상품 + 테스트 할인 · 재고 변경 | `cart.empty` · `auth.login.locked` |
+
+## CSR and SSR
+
+지원 여부는 프레임워크 이름보다 **데이터를 가져오는 위치와 연결한 어댑터**에 따라 달라집니다.
+
+| 데이터가 오는 곳 | 지원 범위 |
+| :--- | :--- |
+| 브라우저 `fetch` · CSR | 콘솔 `test.mock()` / `test.patch()`로 다음 응답을 변경합니다. 앱이 다시 요청해야 UI에 반영됩니다. |
+| SSR · Server Component · 서버 loader | 서버에 `createServerTestMode()`를 연결하면 가능합니다. 등록된 시나리오 선택을 쿠키로 전달하고 새 서버 렌더에서 적용합니다. |
+| 브라우저에서 직접 입력한 임시 JSON → SSR | 자동 전송하지 않습니다. 브라우저와 서버는 별도 런타임입니다. |
+| 이미 받은 HTML · 앱 캐시 · 빌드 시 생성한 정적 페이지 | 소급해서 변경하지 않습니다. 앱의 재요청·캐시 갱신 또는 새로운 서버 렌더가 필요합니다. |
+| 서버의 DB 조회 · XHR · WebSocket | 기본 fetch 어댑터의 대상이 아닙니다. 데이터 접근 경계에 별도 연결이 필요합니다. |
+
+`test mode`는 테스트 응답을 적용한 앱의 활성 상태를 뜻합니다. 이 도구는 UI 디버깅을 돕고, 자동 테스트의 실행과 판정은 별도의 테스트 실행기가 담당합니다.
 
 ## See it in action
 
@@ -42,7 +59,7 @@
 
 **Console에서 값을 입력 → 테스트 모드 활성화 → 실제 앱 갱신.** `test.patch()`로 가격을 바꾸거나 `test.mock()`으로 상품·오류 응답을 직접 넣어보세요. JSON 편집기에서도 같은 API를 실행할 수 있습니다.
 
-데모에서는 콘솔 변경을 구독해 화면을 자동 갱신합니다. 받은 응답·HTTP 상태·실제 네트워크 요청 횟수를 함께 표시합니다. 값은 이 탭의 메모리에만 있고, `test.clear()`나 새로고침으로 초기화됩니다.
+이 공개 데모는 **브라우저 fetch / CSR 예제**이며, 콘솔 변경을 구독해 화면을 자동 갱신합니다. 받은 응답·HTTP 상태·실제 네트워크 요청 횟수를 함께 표시합니다. 값은 이 탭의 메모리에만 있고, `test.clear()`나 새로고침으로 초기화됩니다. 실제 HTML을 서버에서 만드는 별도의 [SSR 실행 예제](https://github.com/uiwwsw/test-mode/tree/main/examples/server)도 제공합니다.
 
 [데모 실행 · Vercel Import 설정](https://github.com/uiwwsw/test-mode/tree/main/examples/browser) · [배너와 데모 생성 소스](https://github.com/uiwwsw/test-mode/blob/main/scripts/render-doc-assets.mjs)
 
@@ -84,6 +101,30 @@ test.clear();           // 임시 값·시나리오 모두 끄기
 
 > `enabled`는 Node의 `development` / `test` 환경에서만 기본 활성화됩니다. 브라우저에서는 앱의 개발 환경 조건을 명시하세요. 팀이 공유할 동작은 `defineMock` / `definePatch`로 등록하고 `defineStory`로 묶을 수 있습니다.
 
+## Server rendering
+
+서버에서는 **들어오는 요청마다** 런타임을 생성하고, 반환된 fetch를 데이터 조회에 사용합니다.
+
+```ts
+import { createServerTestMode } from '@uiwwsw/test-mode/server';
+import { catalog } from './test-mode/catalog'; // 앱 소유의 공통 definitions / patchDefinitions / stories
+
+async function loadCart(request: Request) {
+  const { fetch: serverFetch } = createServerTestMode({
+    ...catalog,
+    enabled: process.env.NODE_ENV === 'development',
+    cookieHeader: request.headers.get('cookie'),
+  });
+  return (await serverFetch('https://api.example.com/api/cart', {
+    cache: 'no-store',
+  })).json();
+}
+```
+
+브라우저와 서버에 같은 시나리오와 `cookieKey`를 등록하면 `test.story('cart.empty')` 선택 후 새로고침한 HTML에도 반영됩니다. 요청마다 선택 상태·임시 값·호출 횟수가 분리되며 전역 fetch는 바꾸지 않습니다. 들어온 인증 쿠키를 외부 API에 자동 전달하지도 않습니다.
+
+서버 코드에서 `{ runtime }`을 꺼내 `runtime.setPatch()`로 요청 전용 값을 설정할 수도 있습니다. 브라우저에서 입력한 JSON을 서버로 동기화하는 기능은 아닙니다. [SSR / Next.js 연결 가이드](https://github.com/uiwwsw/test-mode/blob/main/docs/server-rendering.md).
+
 ## What you get
 
 | 기능 | 사용 방법 |
@@ -95,7 +136,8 @@ test.clear();           // 임시 값·시나리오 모두 끄기
 | 현재 화면에만 테스트 표시 | `pages`와 SPA 이동을 반영하는 오버레이 |
 | 실제 응답을 유지하면서 필드 변경 | `definePatch()` |
 | 특정 mock 요청만 실제 API에 전달 | `passThrough()` |
-| 서버·API 클라이언트 연결 | `runtime.resolve()`와 `runtime.applyPatch()` |
+| 요청별 SSR fetch | `createServerTestMode()` |
+| 직접 작성하는 API 클라이언트 어댑터 | `runtime.resolve()`와 `runtime.applyPatch()` |
 | 타입과 디버깅 지원 | TypeScript 선언, 소스 코드, source map 제공 |
 
 **필요한 모듈만 가져올 수도 있습니다.** 기존 최상위 import는 그대로 지원합니다.
@@ -104,6 +146,7 @@ test.clear();           // 임시 값·시나리오 모두 끄기
 import { createTestMode, defineMock } from '@uiwwsw/test-mode/core';
 import { createMockFetch } from '@uiwwsw/test-mode/fetch';
 import { installTestModeOverlay } from '@uiwwsw/test-mode/browser';
+import { createServerTestMode } from '@uiwwsw/test-mode/server';
 ```
 
 `core`에는 콘솔·오버레이 구현을 포함하지 않습니다. 서버 어댑터와 브라우저 설치 코드를 분리해서 구성할 수 있습니다.
@@ -125,6 +168,7 @@ npm ci
 npm run ci             # 타입 · 런타임 · tarball 설치 및 consumer 타입 검증
 npm run test:browser   # Chromium 통합 테스트 (최초: npx playwright install chromium)
 npm run dev:example    # 콘솔 · JSON 입력 데모
+npm run dev:ssr        # 콘솔 시나리오 → 쿠키 → 실제 SSR HTML 예제
 npm run build:demo     # Vercel용 demo-dist 생성
 ```
 
