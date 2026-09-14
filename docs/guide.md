@@ -121,7 +121,9 @@ story는 고유한 `key`, `title`, `description`, 등록된 `entries`가 필요�
 
 ## 앱에 적용하기
 
-스타터를 복사한 뒤 `config.ts`의 `enabled`를 앱 환경에 맞게 설정하세요.
+**기존 호출 코드는 그대로 두고, 테스트 데이터와 시나리오는 앱 소유의 폴더에 모으세요.** 브라우저 fetch를 앱 시작 시 한 번 연결하면 호출부마다 테스트 전용 분기를 넣을 필요가 없습니다. 한 번 확인할 값은 콘솔의 `test.mock()` / `test.patch()`로만 사용하고, 반복할 동작만 파일로 남길 수 있습니다.
+
+스타터를 복사한 뒤 `config.ts`의 `enabled`를 앱 환경에 맞게 설정하세요. 이 폴더는 패키지 내부가 아니라 여러분의 앱 코드이므로 필요한 데이터와 시나리오를 직접 수정하고 코드 리뷰할 수 있습니다.
 
 ```bash
 cp -R node_modules/@uiwwsw/test-mode/templates/test-mode src/test-mode
@@ -137,6 +139,8 @@ src/test-mode/
 ```
 
 React/Next.js의 effect에서는 `return installAppTestMode()`로 정리 함수를 반환하세요. Vite의 HMR에서는 `import.meta.hot?.dispose(cleanup)`을 사용하세요. Vue/일반 앱은 클라이언트 bootstrap에서 한 번 설치하고 앱을 해제할 때 cleanup을 호출합니다.
+
+기존 API 모듈은 계속 `fetch('/api/cart')`를 호출합니다. 별도 폴더의 동작을 등록하고 콘솔에서 `test.story('cart.empty')`처럼 선택하면 다음 API 응답부터 바뀝니다. 앱의 재요청 방식은 그대로 사용하거나 `runtime.subscribe()`에 연결하세요. SSR은 아래의 요청별 서버 어댑터를 사용합니다.
 
 ## 서버 / axios 어댑터
 
