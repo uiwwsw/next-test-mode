@@ -47,3 +47,20 @@ test("SSR mocks preserve HTTP errors and escape HTML supplied from Console", asy
   await page.setViewportSize({width:375,height:812});
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test("SSR controls wait for client setup when server HTML arrives first", async ({ page }) => {
+  let release;
+  const ready = new Promise(resolve => { release = resolve; });
+  await page.route('**/ssr-client.js', async route => { await ready; await route.continue(); });
+  try {
+    await page.goto('http://127.0.0.1:4176/auto', { waitUntil: 'commit' });
+    await expect(page.locator('[data-ssr-total]')).toHaveText('42');
+    await expect(page.getByRole('button', { name: 'SSR에 적용' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: '원래 응답', exact: true })).toBeDisabled();
+    await expect(page.locator('#ssr-patch')).toBeDisabled();
+    release();
+    await expect(page.getByRole('button', { name: 'SSR에 적용' })).toBeEnabled();
+    await page.getByRole('button', { name: 'SSR에 적용' }).click();
+    await expect(page.locator('[data-ssr-total]')).toHaveText('12.34');
+  } finally { release(); }
+});
