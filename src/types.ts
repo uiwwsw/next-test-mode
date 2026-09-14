@@ -10,6 +10,8 @@ export type TestModeLogger = Partial<
 
 export type MockResult = Readonly<{
   data: unknown;
+  /** Explicit JSON encoding, including string payloads. Otherwise BodyInit values stay raw. */
+  bodyFormat?: "json";
   headers?: HeadersInit;
   status: number;
   statusText: string;
@@ -211,4 +213,20 @@ export type TestModeConsoleHelp = Readonly<{
   commands: Readonly<Record<string, string>>;
   examples: readonly string[];
   summary: string;
+}>;
+
+/** One in-memory, exact-path response experiment. Default method: GET. */
+export type ResponseOverrideOptions = Readonly<{
+  method?: string;
+  status?: number;
+  statusText?: string;
+}>;
+
+export type ResponseOverride = Readonly<{
+  path: string;
+  method: string;
+  mode: "mock" | "patch";
+  data: unknown;
+  status?: number;
+  statusText?: string;
 }>;

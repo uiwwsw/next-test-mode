@@ -6,6 +6,14 @@
 
 A scenario is a configuration, not an automated test. The library does not make assertions, decide pass/fail, run a browser, host an API, seed a database, or reset application caches. An application or external test runner must trigger a new request after changing scenarios.
 
+## Temporary response values
+
+The console exposes `mock`, `patch`, `overrides`, and `reset` for immediate, in-memory experiments. Core owns these through `setMock`, `setPatch`, `overrides`, and `resetOverrides`. The override registry is separate from the shared feature/story catalog and persistence. It matches the exact normalized pathname and one HTTP method (GET by default), with no API-prefix aliases or patterns. The most recent value for a path/method replaces its predecessor.
+
+An override takes precedence over selected definitions for that request. A patch override bypasses a selected mock so that it can operate on the actual HTTP response; a mock override bypasses selected patches. Removing an override reveals the underlying selected scenario. `clear()` removes both. Explicit cookie-scoped requests ignore in-memory overrides to keep server adapters request-scoped.
+
+Override values are validated JSON snapshots, copied at input, inspection, and resolution boundaries. Patches shallow-merge object fields and reject non-object upstream payloads. Changes notify subscribers, but the application owns any refetch/cache invalidation. The demo subscribes and cancels superseded requests to update its preview from the console without extra clicks.
+
 ## Request lifecycle
 
 ```mermaid
@@ -55,7 +63,7 @@ Without a browser, an instance owns its active state in memory. For shared SSR/s
 - `RequestInit.headers` replaces Request headers. Reading a Request body for mocking does not consume the original input used by the network adapter.
 - `resolve()` returns an HTTP result envelope or null for no match/pass-through. Handler exceptions reject; they are not silently converted to network requests.
 - `applyPatch()` returns `{ data }`, including `{ data: null }`, or null for no match. `patch()` is the older payload-only API with an ambiguous null sentinel.
-- A mock response can be JSON, text or a native BodyInit value. HEAD/204/205/304 remain bodyless. Opaque responses and bodyless upstream responses bypass patching.
+- A mock response can be JSON, text or a native BodyInit value. `bodyFormat: "json"` explicitly JSON-encodes strings as well; temporary mocks use this format. HEAD/204/205/304 remain bodyless. Opaque responses and bodyless upstream responses bypass patching.
 - Abort signals reject waiting callers promptly, including while an asynchronous mock is pending. Arbitrary user handler side effects cannot be forcibly cancelled.
 - Selecting a case removes all selected cases that conflict on path and HTTP method. Story registration rejects conflicting cases and missing/duplicate metadata or unknown entries. Failed registration does not partially mutate the existing catalog.
 - Selecting a story replaces active feature entries; adding a story preserves compatible entries. Story removal removes its referenced entries even if another story also references them.
