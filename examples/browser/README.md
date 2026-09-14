@@ -1,5 +1,7 @@
 # Console-first playground
 
+**[공개 데모 열기](https://test-mode-tau.vercel.app/)**
+
 개발자 도구 → Console에서 값을 입력하면 실제 앱 미리보기가 즉시 바뀌는 데모입니다. 화면의 JSON 편집기도 동일한 패키지 API를 호출합니다.
 
 ```js
