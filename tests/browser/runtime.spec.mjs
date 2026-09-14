@@ -487,3 +487,44 @@ test("removing browser storage does not resurrect the cookie selection in anothe
   await expect.poll(() => page.evaluate(() => runtime.active())).toEqual([]);
   expect(await page.evaluate(() => changes)).toEqual([[]]);
 });
+
+test("one-call setup stays memory-only by default and cleanup cancels refresh", async ({ page }) => {
+  const result = await page.evaluate(async () => {
+    const original = window.fetch;
+    let refreshes = 0;
+    const { runtime, stop } = api.setupTestMode({ enabled: true, refresh: () => { refreshes++; } });
+    test.mock('/api/cart', { total: 7 });
+    const response = await (await fetch('/api/cart')).json();
+    const cookie = document.cookie;
+    stop();
+    stop();
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return { response, cookie, refreshes, restored: window.fetch === original, consoleRemoved: window.test === undefined, overrides: runtime.overrides().length };
+  });
+  expect(result).toMatchObject({ response: { total: 7 }, refreshes: 0, restored: true, consoleRemoved: true, overrides: 1 });
+  expect(result.cookie).not.toContain('.ssr=');
+});
+
+test("SSR setup rejects unavailable cookies before installing any globals", async ({ page }) => {
+  const result = await page.evaluate(() => {
+    const original = window.fetch;
+    Object.defineProperty(document, 'cookie', { configurable: true, get: () => '', set: () => {} });
+    let message;
+    try { api.setupTestMode({ enabled: true, ssr: true }); } catch (error) { message = error.message; }
+    delete document.cookie;
+    return { message, restored: window.fetch === original, consoleRemoved: window.test === undefined };
+  });
+  expect(result.message).toMatch(/cookie/i);
+  expect(result).toMatchObject({ restored: true, consoleRemoved: true });
+});
+
+test("disabled setup never touches cookie, fetch or Console even with SSR requested", async ({ page }) => {
+  const result = await page.evaluate(() => {
+    const original = window.fetch;
+    const cookie = document.cookie;
+    const installation = api.setupTestMode({ enabled: false, ssr: true });
+    installation.stop();
+    return { sameFetch: window.fetch === original, sameCookie: cookie === document.cookie, consoleRemoved: window.test === undefined };
+  });
+  expect(result).toEqual({ sameFetch: true, sameCookie: true, consoleRemoved: true });
+});

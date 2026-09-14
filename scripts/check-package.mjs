@@ -33,12 +33,16 @@ try {
   );
   const files = new Set(pack.files.map((file) => file.path));
   for (const required of [
+    "bin/test-mode.mjs",
     "dist/index.js",
     "dist/core.js",
     "dist/browser.js",
     "dist/fetch.js",
     "dist/server.js",
     "dist/server.d.ts",
+    "dist/setup.js",
+    "dist/node.js",
+    "dist/next.js",
     "dist/index.d.ts",
     "dist/types.d.ts",
     "src/types.ts",
@@ -92,6 +96,7 @@ try {
     readFileSync(join(installed, "package.json"), "utf8"),
   );
   assert.equal(manifest.name, "@uiwwsw/test-mode");
+  assert.match(run(process.execPath, [join(installed, manifest.bin["test-mode"]), "--help"], temp), /init --next/);
   for (const entry of Object.values(manifest.exports)) {
     assert.ok(
       files.has(entry.import.replace(/^\.\//, "")),
@@ -114,6 +119,11 @@ try {
     const browser = await import('@uiwwsw/test-mode/browser');
     const adapter = await import('@uiwwsw/test-mode/fetch');
     const server = await import('@uiwwsw/test-mode/server');
+    const node = await import('@uiwwsw/test-mode/node');
+    const setup = await import('@uiwwsw/test-mode/setup');
+    assert.equal(typeof node.withTestMode, 'function');
+    assert.equal(typeof node.installServerTestMode, 'function');
+    assert.equal(typeof setup.setupTestMode, 'function');
     assert.equal(core.createTestMode, createTestMode);
     assert.equal(adapter.createMockFetch, createMockFetch);
     assert.equal(typeof browser.installConsole, 'function');
@@ -132,6 +142,10 @@ try {
   cpSync(join(installed, "templates/test-mode"), join(temp, "template"), {
     recursive: true,
   });
+  // Node entry consumers use Node's standard type declarations. Browser/root
+  // imports remain independent from Node and the optional Next.js peer.
+  cpSync(resolve("node_modules/@types/node"), join(temp, "node_modules/@types/node"), { recursive: true });
+  cpSync(resolve("node_modules/undici-types"), join(temp, "node_modules/undici-types"), { recursive: true });
   writeFileSync(
     join(temp, "consumer.ts"),
     `
@@ -153,6 +167,12 @@ try {
     const serverFetch: typeof fetch = scope.fetch;
     void [core, adapter, browser, serverFetch];
     void wrapped;
+    const { setupTestMode } = await import('@uiwwsw/test-mode/setup');
+    const { withTestMode, installServerTestMode } = await import('@uiwwsw/test-mode/node');
+    const { setupNextTestMode }: typeof import('@uiwwsw/test-mode/next') = {} as typeof import('@uiwwsw/test-mode/next');
+    const wrappedHandler = withTestMode((request, response) => { response.end(request.url); }, { enabled: false });
+    const cleanup: () => void = wrappedHandler.dispose;
+    void [setupTestMode, installServerTestMode, setupNextTestMode, cleanup];
   `,
   );
   writeFileSync(

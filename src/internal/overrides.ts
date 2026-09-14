@@ -67,6 +67,12 @@ const normalizeMethod = (method = "GET") => {
 export class ResponseOverrides {
   private entries = new Map<string, ResponseOverride>();
 
+  clone() {
+    const result = new ResponseOverrides();
+    result.entries = new Map(this.entries);
+    return result;
+  }
+
   set(
     path: string,
     data: unknown,
