@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="콘솔에서 브라우저 API 응답을 바꿔 실제 UI 상태를 재현하세요. test.mock, test.patch로 동작하는 CSR 데모와 SSR 연결 가이드."
+      content="호출 코드는 그대로. 테스트 데이터는 따로. 확인은 콘솔에서. 기존 브라우저 fetch 호출로 원하는 API 응답을 확인하는 test mode 라이브 데모."
     />
-    <title>test mode · 값을 바꾸고, 화면을 확인하세요</title>
+    <title>test mode · 호출은 그대로, 값은 원하는 대로</title>
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23173c36'/%3E%3Ctext x='13' y='29' fill='%23b9fbd6' font-size='30' font-family='Georgia'%3Et%3C/text%3E%3C/svg%3E"
@@ -28,16 +28,33 @@
       </header>
       <div class="intro">
         <div>
-          <p class="eyebrow">BROWSER API RESPONSES → YOUR UI</p>
-          <h1>원하는 값을 넣어보세요.</h1>
+          <p class="eyebrow">SAME API CALLS. YOUR TEST DATA.</p>
+          <h1>호출은 그대로, 값은 원하는 대로.</h1>
           <p>
-            콘솔에서 브라우저 API 응답을 바꾸면, 오른쪽 앱이 바로 반응합니다.
+            기존 API 호출로 다양한 화면을 확인하세요. 테스트할 값은 콘솔에서
+            바꿉니다.
           </p>
         </div>
         <span id="runtime-state" class="runtime-state" role="status"
           >● Test mode 꺼짐</span
         >
       </div>
+      <section class="benefits" aria-label="test mode의 세 가지 장점">
+        <div>
+          <h2>호출 코드는 그대로</h2>
+          <p>
+            시작할 때 한 번 연결하고, 기존 <code>fetch()</code>를 계속 씁니다.
+          </p>
+        </div>
+        <div>
+          <h2>테스트 데이터는 따로</h2>
+          <p>한 번 쓸 값은 콘솔에, 반복할 시나리오는 전용 폴더에 둡니다.</p>
+        </div>
+        <div>
+          <h2>확인은 콘솔에서</h2>
+          <p>가격·빈 목록·오류 응답을 한 줄로 바꾸고 바로 확인하세요.</p>
+        </div>
+      </section>
       <section class="console-guide" aria-label="개발자 도구에서 시작">
         <div class="guide-top">
           <strong>01 <span>개발자 도구 → Console</span></strong

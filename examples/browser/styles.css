@@ -149,6 +149,26 @@ h1 {
   border-color: #82c6a2;
   color: #154a35;
 }
+.benefits {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+  margin-bottom: 20px;
+}
+.benefits h2 {
+  font-size: 15px;
+  margin: 0 0 3px;
+}
+.benefits p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0;
+  word-break: keep-all;
+}
 .console-guide {
   background: #102e29;
   border: 1px solid #244c42;
@@ -602,6 +622,10 @@ footer a {
   }
   .workspace {
     grid-template-columns: 1fr;
+  }
+  .benefits {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
   .top {
     margin-bottom: 22px;

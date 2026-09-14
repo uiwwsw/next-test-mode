@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1 — 2026-09-14
+
+- Lead the README, npm presentation and live demo with three benefits: unchanged browser fetch call sites after bootstrap setup, isolated reusable scenario files, and immediate console data experiments.
+- Show the same application API call with different test data, and explain when to keep an experiment temporary or move it into an app-owned test-mode folder.
+- Refresh the banner and recorded demo while retaining explicit CSR/SSR and persistence boundaries. Runtime APIs are unchanged.
+
 ## 0.4.0 — 2026-09-14
 
 - Define test mode as console-first API response overrides for UI debugging, with an explicit CSR/SSR support matrix and updated playground guidance.
