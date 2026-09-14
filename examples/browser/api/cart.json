@@ -1,0 +1,7 @@
+{
+  "items": [
+    { "name": "Canvas tote", "price": 24 },
+    { "name": "Everyday mug", "price": 18 }
+  ],
+  "total": 42
+}

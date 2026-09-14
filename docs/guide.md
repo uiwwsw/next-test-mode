@@ -2,6 +2,30 @@
 
 설치와 첫 실행은 [README](https://github.com/uiwwsw/test-mode#readme)를 참고하세요.
 
+## 직접 응답 값 넣기
+
+콘솔의 `test.mock(path, data, options?)`는 등록 없이 즉시 응답을 교체하고, `test.patch(path, fields, options?)`는 실제 응답의 필드를 변경합니다.
+
+```js
+test.mock('/api/cart', { items: [], total: 0 });
+test.patch('/api/cart', { total: 9.99 });
+test.mock('/api/login', { message: 'Locked' }, { method: 'POST', status: 403 });
+test.overrides(); // [{ path, method, mode, data, ... }]
+test.reset('/api/cart', { method: 'GET' });
+test.reset(); // 모든 임시 값 제거. 선택된 feature/story는 유지
+test.clear(); // 임시 값, feature/story, extension 모두 끄기
+```
+
+- 기본 method는 GET이며 대소문자를 정규화합니다. 경로는 `/`로 시작하는 정확한 pathname입니다. query/hash는 제외하고 origin은 구분하지 않습니다. feature의 `/api` 별칭·패턴 매칭은 임시 값에 적용하지 않습니다.
+- 같은 경로·method에 다시 입력하면 이전 임시 값을 교체합니다. 임시 값이 선택된 feature/story보다 우선합니다. Patch는 기존 Mock도 우회하고 실제 HTTP 응답에 적용합니다. `reset()`하면 아래에 있던 feature/story가 다시 적용되므로 완전히 실제 API로 돌아가려면 `clear()`를 사용하세요.
+- Mock은 JSON 객체·배열·문자열·숫자·boolean·null을 지원합니다. HTTP 상태는 200–599이며 HEAD/204/205/304의 본문은 생략합니다. 함수·순환 참조·undefined·NaN 등은 거부합니다. 입력 실패 시 기존 값은 유지합니다.
+- Patch는 객체의 최상위 필드를 덮어씁니다. 중첩 객체나 배열은 통째로 교체합니다. 원래 응답이 객체가 아니면 오류를 내므로 전체 교체가 필요할 때는 Mock을 쓰세요.
+- 입력과 조회 결과는 복사됩니다. 값은 해당 runtime 메모리에만 있으며 localStorage/cookie에 쓰거나 다른 탭과 공유하지 않습니다. 명시적인 `cookieHeader`를 가진 서버 요청에는 적용하지 않습니다.
+- `test.isEnabled()`와 오버레이는 임시 값도 반영합니다. `runtime.active()`는 등록된 feature 선택만 반환하며, 임시 값은 `runtime.overrides()`로 확인합니다.
+- 라이브러리는 앱 캐시를 직접 갱신하지 않습니다. 데모는 `runtime.subscribe()`를 데이터 재요청에 연결하므로 콘솔만 조작해도 즉시 화면이 바뀝니다.
+
+TypeScript나 서버 어댑터에서는 같은 기능을 `runtime.setMock()`, `runtime.setPatch()`, `runtime.overrides()`, `runtime.resetOverrides()`로 사용합니다. `runtime.patch()`는 기존 응답 처리 API이므로 그대로 유지합니다.
+
 ## Mock, Patch, 요청 데이터
 
 ```ts

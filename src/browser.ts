@@ -172,6 +172,9 @@ export const installConsole = (
   const target = window as unknown as Record<string, unknown>;
   const active = () => [
     ...testMode.active(),
+    ...testMode
+      .overrides()
+      .map((item) => `${item.mode.toUpperCase()} ${item.method} ${item.path}`),
     ...activeExtensionLabels(extensions),
   ];
   const add = (path: string) => {
@@ -298,7 +301,16 @@ export const installConsole = (
       "test()": "Show this help.",
       "test('story.key')":
         "Apply a story when the key exists; otherwise toggle a feature entry.",
-      "test.clear()": "Disable all entries and extensions.",
+      "test.clear()":
+        "Clear response overrides, active entries and extensions.",
+      "test.mock('/api/cart', { items: [], total: 0 })":
+        "Immediately replace the GET response with your JSON value.",
+      "test.patch('/api/cart', { total: 9.99 })":
+        "Shallow-merge fields into the real GET response.",
+      "test.overrides()":
+        "Inspect temporary response overrides (not persisted).",
+      "test.reset('/api/cart')":
+        "Remove this path's overrides and restore the selected scenario or real API.",
       "test.feat.add('path:caseKey')": "Enable one feature entry.",
       "test.feat.list()": "List feature mock/patch API entries.",
       "test.feat.remove('path:caseKey')": "Disable one feature entry.",
@@ -320,6 +332,8 @@ export const installConsole = (
     },
     examples: [
       "test()",
+      "test.patch('/api/cart', { total: 9.99 })",
+      "test.mock('/api/cart', { message: 'Try again' }, { status: 503 })",
       "test.story.list('/cart')",
       "test.search('cart')",
       "test.story('cart.discount-flow')",
@@ -329,7 +343,7 @@ export const installConsole = (
       "test.clear()",
     ],
     summary:
-      "Use story commands for shared screen states; use feat commands for one API mock/patch entry at a time.",
+      "Use mock/patch to try your own JSON values immediately, story for shared scenarios, and clear to restore the real API.",
   });
   const run = (input?: string) =>
     typeof input === "string" && input.trim() ? apply(input) : help();
@@ -338,6 +352,10 @@ export const installConsole = (
     clear,
     feat,
     help,
+    mock: testMode.setMock,
+    patch: testMode.setPatch,
+    overrides: testMode.overrides,
+    reset: testMode.resetOverrides,
     isEnabled: () => active().length > 0,
     search: (input?: TestModeSearchInput) => testMode.search(input),
     story: storyCommand,
