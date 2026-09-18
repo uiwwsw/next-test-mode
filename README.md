@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v0.6.0/docs/assets/hero.png" width="100%" alt="Next Test Mode — Same API calls. Your test data. CSR, SSR, ISR and SSG from one Console." />
+  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v0.7.0/docs/assets/hero.png" width="100%" alt="Next Test Mode — Same API calls. Your test data. CSR, SSR, ISR and SSG from one Console." />
 </p>
 <p align="center">
   <strong>호출 코드는 그대로. 테스트 데이터는 따로. 확인은 콘솔에서.</strong><br />
@@ -52,13 +52,24 @@ npx @uiwwsw/next-test-mode init
 npm run dev
 ```
 
-설치 명령이 `app/` 또는 `src/app/`, JavaScript/TypeScript를 감지해 **세 파일**을 생성합니다.
+설치 명령이 `app/` 또는 `src/app/`, JavaScript/TypeScript를 감지해 **얇은 연결 파일 세 개와 테스트 전용 폴더**를 생성합니다.
 
 | 파일 | 하는 일 |
 | :--- | :--- |
 | `instrumentation.ts` 또는 `.js` | 서버의 기존 fetch에 요청별 테스트 데이터 연결 |
 | `instrumentation-client.ts` 또는 `.js` | Console·브라우저 fetch·Draft Mode·자동 새로고침 연결 |
 | `app/api/next-test-mode/route.ts` 또는 `.js` | Next.js의 Draft Mode 쿠키를 켜고 끄는 POST 경로 |
+
+```text
+src/                         # src 없는 앱은 프로젝트 루트
+  app/                       # 실제 페이지와 API: 테스트 폴더를 import하지 않음
+  test-mode/
+    catalog.ts               # mock · patch · story: 이곳만 편집
+    client.ts                # Console와 브라우저 연결
+    server.ts                # 서버 fetch와 Draft 연결
+```
+
+테스트 정의는 `catalog.ts` 한 곳에 두고 브라우저와 서버가 함께 사용합니다. 일반 production 빌드에서는 조건부 연결이 제거됩니다. CI는 **테스트 카탈로그가 브라우저·서버 번들에서 빠지는지** 실제 빌드 산출물로 확인합니다. QA 빌드에는 의도적으로 포함됩니다.
 
 페이지, API 함수, Next 설정 파일은 수정하지 않습니다. 기존 사용자 파일이 있으면 변경 없이 합칠 코드를 출력합니다. 워커나 별도 서버는 필요하지 않습니다.
 
@@ -69,7 +80,7 @@ npm run dev
 **[CSR](https://test-mode-tau.vercel.app/csr) · [SSR](https://test-mode-tau.vercel.app/ssr) · [ISR](https://test-mode-tau.vercel.app/isr) · [SSG](https://test-mode-tau.vercel.app/ssg)** — 같은 장바구니를 네 가지 렌더 방식으로 직접 비교하세요.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v0.6.0/docs/assets/scenarios.gif" width="960" alt="실제 Next.js 데모: SSG 원래 가격, 콘솔 patch, SSR에서도 같은 값, HTTP 503, 원래 캐시 응답 복귀." />
+  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v0.7.0/docs/assets/scenarios.gif" width="960" alt="실제 Next.js 데모: SSG 원래 가격, 콘솔 patch, SSR에서도 같은 값, HTTP 503, 원래 캐시 응답 복귀." />
 </p>
 
 데모의 DevTools Console에 입력하거나, 화면의 JSON 편집기에서 원하는 값을 적용하세요.
@@ -100,11 +111,28 @@ SSR·ISR·SSG 탭에서는 **서버가 보낸 HTML 자체에 변경된 값이 �
 
 실제 production 빌드로 검증한 기준은 **Next.js 16.3.5 / App Router / Node 런타임**입니다. Pages Router, Edge, `output: 'export'`는 자동 연결 대상이 아닙니다. 직접 DB 조회, XHR·WebSocket, fetch를 거치지 않는 외부 캐시에도 별도 어댑터가 필요합니다. 캐시 내부의 요청 쿠키를 읽는 작은 Next 내부 브리지가 있어, Next 버전 업그레이드 시 production 회귀 테스트가 필요합니다. [동작 원리와 호환성](https://github.com/uiwwsw/next-test-mode/blob/main/docs/server-rendering.md).
 
+## Console controls the server preview
+
+콘솔에서 바꾼 값이 서버에서 렌더한 HTML까지 바뀌는 것이 핵심입니다. **데이터를 조작하지 않고 캐시만 우회해서 실제 응답을 다시 확인할 수도 있습니다.**
+
+```js
+test.cache.bypass();  // 내 Next Draft 세션에서 새 서버 렌더. mock 없어도 사용 가능
+test.cache.status();  // 연결 상태, Draft 활성 여부, 미반영 변경, 오류 확인
+test.cache.refresh(); // 같은 값으로 다시 렌더
+test.cache.restore(); // 테스트 입력·시나리오·수동 우회 해제, 기본 캐시 경로 복귀
+```
+
+`bypass()`는 기존 mock/patch를 유지합니다. `refresh()`는 Draft가 켜져 있을 때 새 서버 렌더를 요청하며, 꺼져 있으면 기존 캐시 정책을 따릅니다.
+
+일반 mock/patch는 캐시 우회를 자동으로 연결하므로 이 명령들을 따로 호출할 필요가 없습니다. `test.clear()`도 전체 테스트를 해제합니다. 초기화 시 기존 CMS Draft 세션은 유지합니다.
+
+**제어 범위는 내 브라우저 세션의 Next 렌더링·데이터 캐시 경로입니다.** 공용 캐시를 삭제하지 않으며, 브라우저 HTTP 캐시·SWR/React Query·Redis·외부 CDN을 일괄 무효화하지 않습니다. [캐시별 동작과 설계](https://github.com/uiwwsw/next-test-mode/blob/main/docs/concept.md).
+
 ## Try once, or keep it in a folder
 
 **잠깐 확인할 테스트는 콘솔에서 끝내세요.** `test.mock()` / `test.patch()` → 화면 확인 → `test.clear()`. 임시 실험 때문에 파일이나 API 호출 코드를 고칠 필요가 없습니다.
 
-**반복할 테스트는 별도 폴더에서 관리하세요.**
+**반복할 테스트는 `init`이 생성한 `test-mode/catalog.ts`에서 관리하세요.**
 
 ```text
 src/
@@ -120,6 +148,7 @@ src/
 import { defineMock } from '@uiwwsw/next-test-mode/core';
 
 export const catalog = {
+  cookieKey: 'test-mode.entries',
   definitions: [
     defineMock('/api/cart', () => ({ items: [], total: 0 }), {
       caseKey: 'empty',
@@ -129,7 +158,9 @@ export const catalog = {
 };
 ```
 
-이 목록을 생성된 두 instrumentation의 `setupNextTestMode({ ...catalog, enabled: true })`와 `setupNextTestModeClient({ ...catalog, enabled: ... })`에 전달하면 Console에서 `test.feat.add('/api/cart:empty')`로 선택할 수 있습니다. 여러 API를 묶은 story도 `test.story('cart.empty')`로 활성화합니다. 서버에서도 쓸 정의에는 브라우저 전용 코드를 넣지 마세요. [스타터와 연결 예시](https://github.com/uiwwsw/next-test-mode/tree/main/templates/test-mode).
+생성된 두 설치 파일이 같은 catalog를 자동으로 읽습니다. Console에서 `test.feat.add('/api/cart:empty')`로 선택하세요. 여러 API를 묶은 story도 `test.story('cart.empty')`로 활성화합니다. 서버에서도 쓸 정의에는 브라우저 전용 코드를 넣지 마세요.
+
+`init`을 다시 실행해도 편집한 테스트 폴더를 덮어쓰지 않습니다. 0.5/0.6의 변경하지 않은 자동 생성 설정은 `init --migrate`로 옮길 수 있습니다. 사용자 코드가 섞인 연결 파일은 변경 없이 합칠 내용을 안내합니다.
 
 ## Details that matter
 

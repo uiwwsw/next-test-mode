@@ -1,6 +1,6 @@
 {
   "name": "@uiwwsw/next-test-mode",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Console-first Next.js test mode: keep fetch calls unchanged and preview CSR, SSR, ISR and SSG with session-isolated Draft Mode.",
   "type": "module",
   "packageManager": "npm@11.16.0",
