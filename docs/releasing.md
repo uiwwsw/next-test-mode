@@ -22,7 +22,7 @@ GitHub Release 발행 또는 Publish workflow에서 기존 tag를 지정하면 �
 4. 전체 CI, 태그·버전 일치, main 포함 여부를 통과하면 npm provenance와 함께 발행합니다.
 5. 레지스트리에서 버전·커밋·무결성·provenance와 실제 설치에 사용하는 패키지 목록·배포 태그까지 확인한 다음, 기존 패키지에 새 이름과 이전 가이드를 안내합니다. 기존 버전은 삭제하지 않습니다.
 
-정식 버전은 `latest`, 사전 버전은 `next` 채널로 배포합니다. 동일 커밋으로 이미 발행했다면 건너뛰며, 다른 커밋의 동일 버전은 거부합니다. 레지스트리 반영은 최대 36회 재시도합니다. 성공 후 일반 `npm view`와 새 소비자 설치로도 확인하세요.
+정식 버전은 `latest`, 사전 버전은 `next` 채널로 배포합니다. 동일 커밋으로 이미 발행했다면 건너뛰며, 다른 커밋의 동일 버전은 거부합니다. 구 패키지의 모든 버전에 이전 안내가 이미 등록돼 있으면 해당 쓰기 작업도 건너뜁니다. 레지스트리 반영은 최대 36회 재시도합니다. 성공 후 일반 `npm view`와 새 소비자 설치로도 확인하세요.
 
 npm [Trusted publishing](https://docs.npmjs.com/trusted-publishers/)을 설정한다면 GitHub user `uiwwsw`, repository **`next-test-mode`**, workflow `publish.yml`, environment `npm`을 사용합니다. 워크플로의 OIDC 권한은 준비되어 있습니다.
 
