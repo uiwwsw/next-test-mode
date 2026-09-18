@@ -11,7 +11,7 @@ export default function Layout({ children }) {
         <header className="site-header">
           <a className="brand" href="/">
             next<span>test mode</span>
-            <i>0.6</i>
+            <i>0.7</i>
           </a>
           <nav aria-label="프로젝트 링크">
             <a href="https://www.npmjs.com/package/@uiwwsw/next-test-mode">

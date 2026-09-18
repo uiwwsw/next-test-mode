@@ -114,3 +114,15 @@ The client writes the bounded JSON snapshot first, then sends an authenticated-b
 The control route validates environment, method, Origin/Host, custom header, fetch metadata, JSON and a 1,024-byte body bound. Optional application authorization runs in an AsyncLocalStorage bypass context, so test mocks cannot forge its fetch response. The same bypass covers Draft bookkeeping. An HttpOnly ownership marker allows clear to close sessions opened by this tool while preserving a previously active CMS preview. The application remains responsible for protecting its preview environment and server-rendered routes.
 
 Next Draft Mode controls caching; overrides remain outside Next's fetch cache. The private bridge only reads the two configured test cookies, never forwards the incoming authentication header, and never mutates Next internals. Upgrades must pass production integration checks; a matching peer range alone does not certify future Next releases.
+
+## 0.7: test-code boundary and preview coordinator
+
+The CLI now generates an app-owned `test-mode/catalog`, `client` and `server` folder. Application pages/API calls do not import it. Framework hooks are thin, environment-gated entry points. The client uses a conditional synchronous require so interception is installed before the first application fetch. Production integration checks build enabled/disabled variants and inspect both browser and server JavaScript for a unique catalog marker.
+
+`src/internal/preview-session.ts` owns synchronization independently from the DOM and Next APIs. It tracks the rendered snapshot separately from the requested snapshot and forced-refresh revision. Each connection acknowledges a snapshot; edits arriving during connection or asynchronous refresh are drained before completion. A failed connection or refresh remains observable and retryable, while stop prevents subsequent refreshes.
+
+`src/internal/draft-transport.ts` owns the captured unmockable transport, request validation, timeout (10 seconds by default), parent cancellation and listener/timer cleanup. `src/client.ts` composes it with the generic runtime, Console and a cookie-backed cache-bypass extension. The extension participates in generic `test.clear()` and overlay lifecycle. No cache policy is added to the core response runtime.
+
+`test.cache.status()` distinguishes unknown server state from acknowledged Draft state and exposes pending changes and errors. `bypass()` enables a manual Draft session without data overrides; `refresh()` requests another render even for unchanged values; `restore()` clears overrides, selected scenarios and extensions. These operations preserve existing CMS Draft sessions and never purge shared production caches. See [the cache scope matrix](./concept.md).
+
+Generic Console setup accepts additional `commands` namespaces and `commandHelp`; names colliding with built-in commands are rejected before globals are installed. Next reserves the `cache` namespace. Custom global Console names and disposal continue to work.

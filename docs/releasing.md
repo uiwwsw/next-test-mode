@@ -10,7 +10,7 @@ npm run test:demo
 npm pack
 ```
 
-PR/main CI는 Node.js 20.9 / 22 / 24, Chromium, 실제 Next.js 16.3.5를 검증합니다. tarball을 독립 앱에 설치해 ESM·타입·스타터·CLI를 확인합니다. Next fixture는 dev, production의 SSR·SSG·ISR·force-static·생성 경로·unstable_cache, Cache Components/use cache, 비활성 production을 각각 검사합니다. 공개 데모도 네 렌더 모드와 모바일 JSON 입력을 검사합니다.
+PR/main CI는 Node.js 20.9 / 22 / 24, Chromium, 실제 Next.js 16.3.5를 검증합니다. tarball을 독립 앱에 설치해 ESM·타입·스타터·CLI를 확인합니다. Next fixture는 dev, production의 SSR·SSG·ISR·force-static·생성 경로·unstable_cache, Cache Components/use cache, 비활성 production을 각각 검사합니다. 테스트 카탈로그가 비활성 production의 브라우저·서버 번들에서 제외되는지, 첫 CSR fetch부터 가로채는지도 검사합니다. 공개 데모는 네 렌더 모드·모바일 JSON 입력·데이터 조작 없는 캐시 우회/복귀를 검사합니다.
 
 ## npm
 

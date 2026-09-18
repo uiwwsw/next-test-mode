@@ -132,6 +132,11 @@ try {
     assert.equal(typeof node.withTestMode, 'function');
     assert.equal(typeof node.installServerTestMode, 'function');
     assert.equal(typeof setup.setupTestMode, 'function');
+    const client = await import('@uiwwsw/next-test-mode/client');
+    const disabled = client.setupNextTestModeClient({ enabled: false });
+    await disabled.ready;
+    assert.equal(disabled.cache.status().phase, 'disabled');
+    disabled.stop();
     assert.equal(core.createTestMode, createTestMode);
     assert.equal(adapter.createMockFetch, createMockFetch);
     assert.equal(typeof browser.installConsole, 'function');
@@ -188,7 +193,11 @@ try {
     const { setupNextTestMode }: typeof import('@uiwwsw/next-test-mode/next') = {} as typeof import('@uiwwsw/next-test-mode/next');
     const wrappedHandler = withTestMode((request, response) => { response.end(request.url); }, { enabled: false });
     const cleanup: () => void = wrappedHandler.dispose;
-    void [setupTestMode, installServerTestMode, setupNextTestMode, cleanup];
+    const { setupNextTestModeClient } = await import('@uiwwsw/next-test-mode/client');
+    const preview = setupNextTestModeClient({ enabled: false, timeoutMs: 1000 });
+    const cacheStatus: import('@uiwwsw/next-test-mode/client').NextCacheStatus = preview.cache.status();
+    const cachePolicy: 'unknown' | 'bypass' | 'default' = cacheStatus.cache;
+    void [setupTestMode, installServerTestMode, setupNextTestMode, cleanup, cachePolicy];
   `,
   );
   writeFileSync(
