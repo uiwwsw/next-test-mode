@@ -1,5 +1,19 @@
 import { setupTestMode } from "./setup.js";
 import type { SetupTestModeOptions } from "./setup.js";
+import type { TestModeExtension } from "./types.js";
+import { createPreviewSession } from "./internal/preview-session.js";
+import type { PreviewStatus } from "./internal/preview-session.js";
+import { createDraftTransport } from "./internal/draft-transport.js";
+import { readCookieValue } from "./internal/storage.js";
+
+export type NextCacheStatus = Readonly<
+  Omit<PreviewStatus, "phase"> & {
+    phase: PreviewStatus["phase"] | "disabled";
+    scope: "next-draft-session";
+    manualBypass: boolean;
+    cache: "unknown" | "bypass" | "default";
+  }
+>;
 
 export type NextTestModeClientOptions = Omit<
   SetupTestModeOptions,
@@ -9,106 +23,164 @@ export type NextTestModeClientOptions = Omit<
     draftEndpoint?: string;
     refresh?: () => void | Promise<void>;
     onError?: (error: Error) => void;
+    /** Bound the Draft handshake, including its response body. Default 10 seconds. */
+    timeoutMs?: number;
   }>;
 
-/** One browser entry connects Console, fetch, JSON handoff and Next Draft Mode. */
+/** Browser composition only; transport and synchronization have independent lifecycles. */
 export const setupNextTestModeClient = ({
   draftEndpoint = "/api/next-test-mode",
   refresh = () => location.reload(),
+  timeoutMs = 10000,
   onError = (error) => {
     console.error("[next-test-mode]", error.message);
     window.dispatchEvent(
       new CustomEvent("next-test-mode:error", { detail: error.message }),
     );
   },
+  overlay,
   ...options
 }: NextTestModeClientOptions = {}) => {
+  if (!Number.isFinite(timeoutMs) || timeoutMs < 1 || timeoutMs > 2147483647)
+    throw new RangeError("timeoutMs must be between 1 and 2147483647.");
+  if (overlay?.commands && Object.hasOwn(overlay.commands, "cache"))
+    throw new TypeError("The Next Console cache namespace is reserved.");
   let stopped = false;
-  let pending: Promise<void> | undefined;
-  let dirty = false;
-  let lastSynced: string | undefined;
-  const abort = new AbortController();
+  let session: ReturnType<typeof createPreviewSession> | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   const transport = globalThis.fetch.bind(globalThis);
+  const key = `${options.cookieKey ?? options.storageKey ?? "test-mode.entries"}.preview`;
+  const manual = () =>
+    typeof document !== "undefined" &&
+    readCookieValue(document.cookie, key) === "1";
+  const report = (cause: unknown) => {
+    if (!stopped)
+      onError(cause instanceof Error ? cause : new Error(String(cause)));
+  };
+  const schedule = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (!stopped && session?.status().pendingChanges)
+        void session.sync().catch(report);
+    }, 50);
+  };
+  const listeners = new Set<() => void>();
+  const selectManual = (enabled: boolean) => {
+    if (stopped || !installation.runtime.isAvailable())
+      throw new Error("Next Test Mode is not available.");
+    document.cookie = `${key}=${enabled ? "1" : ""}; Path=/; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}${enabled ? "" : "; Max-Age=0"}`;
+    if (manual() !== enabled)
+      throw new Error(
+        "Could not save the cache preview preference. Enable cookies.",
+      );
+    for (const listener of listeners) listener();
+    schedule();
+  };
+  const bypass: TestModeExtension = {
+    key: "next-cache",
+    label: "Next cache bypass",
+    isActive: manual,
+    enable: () => selectManual(true),
+    disable: () => {
+      if (manual()) selectManual(false);
+    },
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+  };
+  const cache = {
+    status: (): NextCacheStatus => ({
+      ...(session?.status() ?? {
+        phase: "disabled" as const,
+        draftEnabled: null,
+        pendingChanges: false,
+        error: null,
+      }),
+      scope: "next-draft-session" as const,
+      manualBypass: manual(),
+      cache:
+        session?.status().draftEnabled === null || !session
+          ? "unknown"
+          : session.status().draftEnabled
+            ? "bypass"
+            : "default",
+    }),
+    bypass: () => {
+      selectManual(true);
+      return session!.sync(true);
+    },
+    refresh: () => {
+      if (!session || stopped)
+        return Promise.reject(new Error("Next Test Mode is not available."));
+      return session.sync(true);
+    },
+    restore: () => {
+      if (!session || stopped)
+        return Promise.reject(new Error("Next Test Mode is not available."));
+      installation.runtime.clear();
+      for (const extension of [bypass, ...(overlay?.extensions ?? [])])
+        extension.disable();
+      return session.sync();
+    },
+  };
   const installation = setupTestMode({
     ...options,
     ssr: true,
-    refresh: () => {
-      if (snapshot() !== lastSynced) {
-        dirty = true;
-        void sync().catch(report);
-      }
+    refresh: schedule,
+    overlay: {
+      ...overlay,
+      extensions: [bypass, ...(overlay?.extensions ?? [])],
+      commands: { ...overlay?.commands, cache },
+      commandHelp: {
+        ...overlay?.commandHelp,
+        "test.cache.status()":
+          "Inspect Draft connection, cache bypass, pending changes and errors.",
+        "test.cache.bypass()":
+          "Preview fresh real data in this Next Draft session without mocks.",
+        "test.cache.refresh()":
+          "Refresh the current preview, even when values have not changed.",
+        "test.cache.restore()":
+          "Clear all test values and return to the ordinary cache path (preserve pre-existing CMS Draft).",
+      },
     },
   });
   const { runtime } = installation;
-  const report = (error: unknown) => {
-    if (!stopped)
-      onError(error instanceof Error ? error : new Error(String(error)));
-  };
-  const snapshot = () =>
-    JSON.stringify({
-      entries: runtime.active(),
-      overrides: runtime.overrides(),
-    });
-  const sync = (): Promise<void> => {
-    if (stopped || !runtime.isAvailable()) return Promise.resolve();
-    if (pending) return pending;
-    pending = (async () => {
+  try {
+    if (runtime.isAvailable()) {
       const endpoint = new URL(draftEndpoint, location.href);
       if (endpoint.origin !== location.origin)
         throw new TypeError("Draft endpoint must be on the same origin.");
-      while (!stopped) {
-        const state = snapshot();
-        const enabled =
-          runtime.active().length > 0 || runtime.overrides().length > 0;
-        const response = await transport(endpoint, {
-          method: "POST",
-          credentials: "same-origin",
-          cache: "no-store",
-          signal: abort.signal,
-          headers: {
-            "Content-Type": "application/json",
-            "X-Next-Test-Mode": "1",
-          },
-          body: JSON.stringify({ enabled }),
-        });
-        if (!response.ok)
-          throw new Error(
-            `Draft Mode connection failed (HTTP ${response.status}). Check the generated route and the app's test-mode environment setting.`,
-          );
-        const result: unknown = await response.json();
-        if (
-          !result ||
-          typeof result !== "object" ||
-          typeof (result as { changed?: unknown }).changed !== "boolean" ||
-          typeof (result as { enabled?: unknown }).enabled !== "boolean"
-        )
-          throw new Error("Draft endpoint returned an invalid response.");
-        if (enabled && !(result as { enabled: boolean }).enabled)
-          throw new Error("Draft endpoint did not enable the preview session.");
-        if (state !== snapshot()) {
-          dirty = true;
-          continue;
-        }
-        lastSynced = state;
-        if (!stopped && (dirty || (result as { changed: boolean }).changed)) {
-          dirty = false;
-          await refresh();
-        }
-        return;
-      }
-    })().finally(() => {
-      pending = undefined;
-    });
-    return pending;
-  };
+      session = createPreviewSession({
+        read: () => {
+          const entries = runtime.active();
+          const overrides = runtime.overrides();
+          const bypass = manual();
+          return {
+            key: JSON.stringify({ entries, overrides, bypass }),
+            enabled: bypass || entries.length > 0 || overrides.length > 0,
+          };
+        },
+        connect: createDraftTransport(transport, endpoint, timeoutMs),
+        refresh,
+      });
+    }
+  } catch (error) {
+    installation.stop();
+    throw error;
+  }
+  const sync = () => session?.sync() ?? Promise.resolve();
   const ready = sync();
   void ready.catch(report);
   const stop = () => {
-    if (!stopped) {
-      stopped = true;
-      abort.abort();
-      installation.stop();
-    }
+    if (stopped) return;
+    stopped = true;
+    clearTimeout(timer);
+    session?.stop();
+    installation.stop();
+    listeners.clear();
   };
-  return { runtime, ready, sync, stop };
+  return { runtime, ready, sync, cache, stop };
 };

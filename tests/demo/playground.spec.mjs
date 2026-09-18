@@ -77,3 +77,29 @@ test("mobile editor, keyboard apply and invalid JSON keep the demo usable", asyn
     ),
   ).toBe(true);
 });
+
+test("demo can bypass server caches without mock data and restore the static result", async ({
+  page,
+}) => {
+  await page.goto("/ssg");
+  await expect(
+    page.getByRole("button", { name: "서버 캐시 우회", exact: true }),
+  ).toBeEnabled();
+  const original = await page.locator("[data-rendered-at]").textContent();
+  await page
+    .getByRole("button", { name: "서버 캐시 우회", exact: true })
+    .click();
+  await expect(page.locator("[data-rendered-at]")).not.toHaveText(original);
+  await expect(page.locator("[data-cache-status]")).toContainText(
+    "우회하는 중",
+  );
+  await expect(page.locator("[data-demo-total]")).toHaveText("42");
+  const preview = await page.locator("[data-rendered-at]").textContent();
+  await page.getByRole("button", { name: "다시 렌더", exact: true }).click();
+  await expect(page.locator("[data-rendered-at]")).not.toHaveText(preview);
+  await page.getByRole("button", { name: "원래 응답", exact: true }).click();
+  await expect(page.locator("[data-rendered-at]")).toHaveText(original);
+  await expect(page.locator("[data-cache-status]")).toContainText(
+    "기본 캐시 경로",
+  );
+});

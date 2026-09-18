@@ -75,6 +75,23 @@ try {
   await page.evaluate(() => window.test.clear());
   await expect(page.locator("[data-demo-total]")).toHaveText("42");
   await ready();
+  await page.goto("http://127.0.0.1:4174/ssg");
+  await ready();
+  await page.evaluate(() => {
+    void window.test.cache.bypass();
+  });
+  await expect(page.locator("[data-cache-status]")).toContainText(
+    "우회하는 중",
+  );
+  await ready();
+  await capture("fresh");
+  await page.evaluate(() => {
+    void window.test.cache.restore();
+  });
+  await expect(page.locator("[data-cache-status]")).toContainText(
+    "기본 캐시 경로",
+  );
+  await ready();
   await capture("reset");
   execFileSync(
     "python3",
@@ -84,12 +101,12 @@ try {
 from PIL import Image
 from pathlib import Path
 import sys
-frames=[Image.open(Path(sys.argv[1])/(name+'.png')).convert('RGB') for name in ['real','patch','server','error','reset']]
+frames=[Image.open(Path(sys.argv[1])/(name+'.png')).convert('RGB') for name in ['real','patch','server','error','fresh','reset']]
 w=max(f.width for f in frames); h=max(f.height for f in frames)
 normalized=[]
 for frame in frames:
  canvas=Image.new('RGB',(w,h),'#f6f8f4'); canvas.paste(frame,(0,0)); normalized.append(canvas)
-normalized[0].save(sys.argv[2],save_all=True,append_images=normalized[1:],duration=[1800,2600,2600,2400,1800],loop=0,optimize=True)
+normalized[0].save(sys.argv[2],save_all=True,append_images=normalized[1:],duration=[1800,2600,2600,2400,3000,1800],loop=0,optimize=True)
 `,
       frames,
       resolve(output, "scenarios.gif"),

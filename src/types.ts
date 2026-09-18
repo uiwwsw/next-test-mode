@@ -194,6 +194,9 @@ export type TestModeOptions = Readonly<{
 }>;
 
 export type TestModeOverlayOptions = Readonly<{
+  /** Extra Console namespaces; existing built-in commands cannot be replaced. */
+  commands?: Readonly<Record<string, unknown>>;
+  commandHelp?: Readonly<Record<string, string>>;
   /** Set false when installing before React hydration to avoid changing app-owned attributes. */
   datasetName?: string | false;
   document?: Document;
@@ -206,6 +209,9 @@ export type TestModeOverlayOptions = Readonly<{
 }>;
 
 export type TestModeConsoleOptions = Readonly<{
+  /** Extra Console namespaces; existing built-in commands cannot be replaced. */
+  commands?: Readonly<Record<string, unknown>>;
+  commandHelp?: Readonly<Record<string, string>>;
   extensions?: readonly TestModeExtension[];
   globalName?: string;
   installExtensions?: boolean;

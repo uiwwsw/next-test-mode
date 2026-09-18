@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 — Separate tests, inspect the server preview
+
+- Generate an app-owned test folder with one shared catalog, browser/server adapters and thin environment-gated hooks; migrate unchanged 0.5/0.6 setup without overwriting custom code.
+- Add Console cache status, manual Draft bypass without mocks, forced refresh and complete restoration. Keep shared production caches intact.
+- Extract a framework-independent preview coordinator and bounded Draft transport. Preserve edits made during async refresh, recover from failures and cancel work on cleanup.
+- Add extensible Console namespaces with built-in collision protection.
+- Verify catalog exclusion from browser/server production bundles, first-CSR-request interception, folder scenarios, cache-only previews and the public demo.
+
 ## 0.6.0 — Next Test Mode
 
 - Rename the npm package to `@uiwwsw/next-test-mode` and repository to `uiwwsw/next-test-mode`; retain the old package for existing installs and document migration.

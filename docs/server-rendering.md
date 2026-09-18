@@ -11,15 +11,17 @@ npx @uiwwsw/next-test-mode init
 
 App Router의 루트 또는 `src/` 구조를 감지합니다. TS 프로젝트는 `.ts`, JS 프로젝트는 `.js` 파일을 생성합니다. 기존 설정은 덮어쓰지 않습니다. 변경하지 않은 구 버전 생성 파일은 `--migrate`로 이전할 수 있습니다.
 
-생성하는 서버 시작 코드:
+테스트 구현은 `test-mode/catalog.ts`, `test-mode/client.ts`, `test-mode/server.ts`에 모읍니다. 브라우저와 서버가 같은 catalog를 읽으며, 실제 페이지와 API는 이 폴더를 import하지 않습니다. 연결 파일은 활성 환경 여부를 검사한 뒤 이 폴더만 연결합니다.
+
+생성하는 서버 연결 코드:
 
 ```ts
 // instrumentation.ts (또는 src/instrumentation.ts)
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs' &&
       (process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_NEXT_TEST_MODE === '1')) {
-    const { setupNextTestMode } = await import('@uiwwsw/next-test-mode/next');
-    setupNextTestMode({ enabled: true });
+    const { registerTestMode } = await import('./test-mode/server');
+    registerTestMode();
   }
 }
 ```
@@ -28,23 +30,27 @@ export async function register() {
 
 ```ts
 // instrumentation-client.ts
-import { setupNextTestModeClient } from '@uiwwsw/next-test-mode/client';
-
-setupNextTestModeClient({
-  enabled: process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_NEXT_TEST_MODE === '1',
-});
+if (process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_NEXT_TEST_MODE === '1') {
+  require('./test-mode/client');
+}
 ```
 
 Draft Mode 경로:
 
 ```ts
 // app/api/next-test-mode/route.ts
-import { createDraftModeHandler } from '@uiwwsw/next-test-mode/next';
-
-export const POST = createDraftModeHandler({
-  enabled: process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_NEXT_TEST_MODE === '1',
-});
+export async function POST(request: Request) {
+  if (process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_NEXT_TEST_MODE === '1') {
+    const { handleDraft } = await import('../../../test-mode/server');
+    return handleDraft(request);
+  }
+  return new Response(null, { status: 404 });
+}
 ```
+
+클라이언트는 조건부 동기 로딩으로 앱의 첫 fetch보다 먼저 설치합니다. 초기화를 기다리지 않는 동적 import는 처음 보낸 요청을 놓칠 수 있습니다. Next 번들러가 이 require를 처리하며, 조건이 꺼진 production 빌드에서는 테스트 카탈로그가 제거되는지 CI가 검증합니다.
+
+`test-mode/client.ts`는 `setupNextTestModeClient({ ...catalog, enabled: true })`를 호출합니다. `test-mode/server.ts`는 `setupNextTestMode({ ...catalog, enabled: true })`와 `createDraftModeHandler({ cookieKey: catalog.cookieKey, enabled: true })`를 연결합니다. 사용자 인증 등 테스트 환경 정책도 이 서버 파일에서 설정하세요.
 
 Next의 기본 Node 런타임을 사용합니다. Cache Components와 함께 쓰는 앱에는 별도의 `runtime` route 설정을 추가하지 않습니다. QA 배포에서는 `NEXT_PUBLIC_NEXT_TEST_MODE=1`을 **빌드와 실행 환경 모두**에 설정하고 재배포하세요. 기본 production 빌드에서는 브라우저 설치와 서버 연결이 꺼지며 제어 경로는 404를 반환합니다.
 
@@ -89,18 +95,23 @@ App Router의 **Next.js 16.3.5, Node.js 20.9 이상**을 기준으로 검증했�
 ```ts
 const controller = setupNextTestModeClient({
   enabled: true, // 앱의 개발/QA 환경 조건 사용
+  timeoutMs: 10000, // 연결과 응답 본문을 포함한 시간 제한
   // draftEndpoint: '/api/next-test-mode',
   // refresh: () => router.refresh(), // 앱이 선택하는 갱신; 기본값은 전체 새로고침
   onError: error => console.error(error.message),
 });
 await controller.ready; // 초기 Draft 상태 확인. 실패하면 reject
 await controller.sync(); // 현재 상태와 Draft 세션을 다시 맞추기
+controller.cache.status(); // 오류/연결/미반영 변경 확인
+await controller.cache.refresh(); // 값이 같아도 새로 렌더
 // 종료/HMR cleanup: controller.stop()
 ```
 
 기본 오류 처리는 Console 출력과 `next-test-mode:error` CustomEvent입니다. 이벤트 `detail`은 오류 메시지입니다. 실패 시 자동 새로고침하지 않습니다. 로컬 런타임과 JSON 쿠키 기록은 이미 끝났을 수 있으므로, 비동기 Draft 연결 전체가 원자적이라고 가정하지 마세요. 설정을 바로잡은 후 `sync()`하거나 페이지를 다시 여세요.
 
-연결 요청은 설치 전에 캡처한 원래 fetch를 사용하므로 Console mock에 가로채이지 않습니다. 빠른 연속 입력은 직렬화하고 최신 상태 확인 후 갱신합니다. 재배포로 Next Draft 쿠키가 만료되면 다음 클라이언트 초기화에서 다시 연결합니다.
+Console에서는 `test.cache.bypass()`로 mock 없이 실제 데이터의 Draft 미리보기를 시작하고, `test.cache.restore()` 또는 `test.clear()`로 종료합니다. 수동 우회 선택은 `.preview` 세션 쿠키로 유지됩니다. `test.cache.status()`의 `scope`는 `next-draft-session`이며 공용 캐시 삭제를 뜻하지 않습니다.
+
+연결 요청은 설치 전에 캡처한 원래 fetch를 사용하므로 Console mock에 가로채이지 않습니다. 빠른 연속 입력은 직렬화하고 최신 상태 확인 후 갱신합니다. 비동기 refresh 도중 추가된 입력도 다시 확인해 누락하지 않습니다. 재배포로 Next Draft 쿠키가 만료되면 다음 클라이언트 초기화에서 다시 연결합니다.
 
 `refresh: () => router.refresh()`는 서버 컴포넌트를 갱신하지만, 앱의 React Query/SWR 캐시나 클라이언트 state를 모두 초기화하지 않습니다. 기본 전체 새로고침은 이러한 앱별 연결을 요구하지 않습니다.
 

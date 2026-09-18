@@ -1,6 +1,6 @@
 # 사용 가이드
 
-> **Next.js App Router:** 먼저 `npm install @uiwwsw/next-test-mode`와 `npx @uiwwsw/next-test-mode init`을 실행하세요. 생성된 `/client` 연결이 Console·Draft Mode·자동 새로고침을 처리합니다. 아래 범용 설치 예제를 중복 설치하지 마세요. SSR·SSG·ISR 지원 범위는 [Next 연결 가이드](./server-rendering.md), 기존 패키지 이전은 [migration](./migration.md)을 확인하세요.
+> **Next.js App Router:** 먼저 `npm install @uiwwsw/next-test-mode`와 `npx @uiwwsw/next-test-mode init`을 실행하세요. 생성된 `test-mode/` 폴더가 Console·Draft Mode·자동 새로고침을 처리합니다. 테스트 정의는 이 폴더의 catalog에서 수정합니다. 아래 범용 설치 예제를 중복 설치하지 마세요. SSR·SSG·ISR 지원 범위는 [Next 연결 가이드](./server-rendering.md), 기존 패키지 이전은 [migration](./migration.md)을 확인하세요.
 
 설치와 첫 실행은 [README](https://github.com/uiwwsw/next-test-mode#readme)를 참고하세요.
 
@@ -169,3 +169,7 @@ if (mock) {
 서버에서는 모든 요청에 `cookieHeader`를 명시해야 사용자별 선택 상태가 섞이지 않습니다. 활성화 cookie는 인증 수단이 아닙니다. 앱의 환경·접근 조건으로 test mode 사용 범위를 결정하세요. 기존 `patch()`도 유지하지만 `null` payload와 매칭 실패를 구분하려면 `applyPatch()`를 사용하세요.
 
 상세 동작과 한계: [설계 및 보장 범위](./architecture.md), [Story 설계](./story-test-design.md).
+
+## Next 전용 캐시 콘솔
+
+`test.cache.status()`는 연결 단계·Draft 상태·미반영 변경·오류를 반환합니다. `test.cache.bypass()`는 데이터 조작 없이 내 Next 세션의 캐시를 우회하고, `test.cache.refresh()`는 현재 미리보기를 다시 요청합니다. `test.cache.restore()`와 `test.clear()`는 입력·시나리오·수동 우회를 해제합니다. 공용 캐시 삭제가 아니며, 상세 범위는 [개념과 캐시 경계](./concept.md)에 설명합니다.

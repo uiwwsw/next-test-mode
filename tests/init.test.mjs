@@ -62,15 +62,15 @@ test("migration replaces only unchanged old generated hooks and adds Draft Mode"
   assert.equal(migrate().status, 0);
   assert.match(
     readFileSync(join(root, "instrumentation.js"), "utf8"),
-    /@uiwwsw\/next-test-mode\/next/,
+    /test-mode\/server/,
   );
   assert.match(
     readFileSync(join(root, "instrumentation-client.js"), "utf8"),
-    /setupNextTestModeClient/,
+    /test-mode\/client/,
   );
   assert.match(
     readFileSync(join(root, "app/api/next-test-mode/route.js"), "utf8"),
-    /createDraftModeHandler/,
+    /handleDraft/,
   );
   assert.equal(migrate().status, 0);
 });
@@ -86,7 +86,7 @@ test("Next init detects src and TypeScript without touching page call sites", (c
   );
   assert.match(
     readFileSync(join(root, "src/instrumentation-client.ts"), "utf8"),
-    /setupNextTestModeClient/,
+    /test-mode\/client/,
   );
   assert.equal(
     readFileSync(join(root, "src/app/page.tsx"), "utf8"),
@@ -102,7 +102,7 @@ test("Next init never overwrites either hook or partially installs on conflict",
   const result = run(root);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /No files changed/);
-  assert.match(result.stderr, /setupNextTestMode/);
+  assert.match(result.stderr, /registerTestMode/);
   assert.equal(
     readFileSync(join(root, "instrumentation-client.ts"), "utf8"),
     "// user's tracing",
@@ -139,10 +139,55 @@ test("Next init adds a guarded Draft Mode route and leaves app fetching unchange
     join(root, "app/api/next-test-mode/route.js"),
     "utf8",
   );
-  assert.match(route, /createDraftModeHandler/);
+  assert.match(route, /handleDraft/);
   assert.match(route, /NEXT_PUBLIC_NEXT_TEST_MODE/);
   assert.equal(
     readFileSync(join(root, "app/page.jsx"), "utf8"),
     "// application",
+  );
+});
+
+test("init preserves edited test catalogs and adapters on subsequent runs", (context) => {
+  const root = fixture(context, true);
+  mkdirSync(join(root, "app"));
+  assert.equal(run(root).status, 0);
+  const file = join(root, "test-mode/catalog.ts");
+  const content = readFileSync(file, "utf8").replace(
+    "definitions: []",
+    "definitions: [] /* app-owned */",
+  );
+  writeFileSync(file, content);
+  assert.equal(run(root).status, 0);
+  assert.equal(readFileSync(file, "utf8"), content);
+  assert.match(
+    readFileSync(join(root, "instrumentation-client.ts"), "utf8"),
+    /if .*NEXT_PUBLIC_NEXT_TEST_MODE/,
+  );
+  assert.match(
+    readFileSync(join(root, "test-mode/server.ts"), "utf8"),
+    /catalog.cookieKey/,
+  );
+});
+
+test("init migrates unedited 0.6 hooks without overwriting a custom route", async (context) => {
+  const { legacyTemplates } = await import("../bin/templates.mjs");
+  const root = fixture(context);
+  mkdirSync(join(root, "app/api/next-test-mode"), { recursive: true });
+  for (const [name, choices] of Object.entries(legacyTemplates))
+    writeFileSync(join(root, name + ".js"), choices.at(-1) + "\n");
+  const route = join(root, "app/api/next-test-mode/route.js");
+  const saved = readFileSync(route, "utf8");
+  writeFileSync(route, saved + "// application authorization\n");
+  const migrate = () =>
+    spawnSync(process.execPath, [cli, "init", "--migrate", "--dir", root], {
+      encoding: "utf8",
+    });
+  assert.equal(migrate().status, 1);
+  assert.equal(existsSync(join(root, "test-mode")), false);
+  writeFileSync(route, saved);
+  assert.equal(migrate().status, 0);
+  assert.match(
+    readFileSync(join(root, "test-mode/client.js"), "utf8"),
+    /setupNextTestModeClient/,
   );
 });

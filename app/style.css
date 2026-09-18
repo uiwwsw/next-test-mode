@@ -614,3 +614,53 @@ textarea:disabled {
     letter-spacing: 1px;
   }
 }
+
+.cache-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 30px;
+  border-top: 1px solid var(--line, #dce6e0);
+  background: #f2f6f0;
+}
+.cache-tools strong {
+  font-size: 14px;
+}
+.cache-tools p {
+  font-size: 12px;
+  margin: 7px 0;
+  color: #587168;
+}
+.cache-tools code {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.cache-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.cache-actions button {
+  font-size: 12px;
+  padding: 10px;
+  border: 1px solid #d4dfd7;
+  border-radius: 7px;
+  background: white;
+  color: #244e40;
+  cursor: pointer;
+}
+.cache-actions button:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+@media (max-width: 700px) {
+  .cache-tools {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 18px;
+  }
+  .cache-actions button {
+    flex: 1;
+  }
+}

@@ -682,3 +682,128 @@ test("Next client serializes rapid changes while Draft activation is in flight",
     release();
   }
 });
+
+test("Next Console exposes cache diagnostics under custom names and restores all test state", async ({
+  page,
+}) => {
+  let active = false;
+  await page.route("**/api/next-test-mode", (route) => {
+    const { enabled } = route.request().postDataJSON();
+    const changed = active !== enabled;
+    active = enabled;
+    return route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ enabled, changed }),
+    });
+  });
+  const state = await page.evaluate(async () => {
+    const { setupNextTestModeClient } = await import("/client.js");
+    let refreshes = 0;
+    const controller = setupNextTestModeClient({
+      enabled: true,
+      refresh: () => {
+        refreshes++;
+      },
+      overlay: { globalName: "qa", namespace: "__qa" },
+    });
+    await controller.ready;
+    const help = qa();
+    await qa.cache.bypass();
+    const bypass = qa.cache.status();
+    qa.patch("/api/cart", { total: 8 });
+    await controller.sync();
+    await qa.cache.refresh();
+    await qa.cache.restore();
+    const restored = qa.cache.status();
+    const overrides = qa.overrides();
+    const cookie = document.cookie;
+    controller.stop();
+    return {
+      help,
+      bypass,
+      restored,
+      refreshes,
+      overrides,
+      cookie,
+      removed: window.qa === undefined,
+    };
+  });
+  expect(state.help.commands["test.cache.status()"]).toContain("Draft");
+  expect(state.bypass).toMatchObject({
+    cache: "bypass",
+    manualBypass: true,
+    draftEnabled: true,
+    phase: "idle",
+  });
+  expect(state.restored).toMatchObject({
+    cache: "default",
+    manualBypass: false,
+    draftEnabled: false,
+  });
+  expect(state.refreshes).toBe(4);
+  expect(state.overrides).toEqual([]);
+  expect(state.cookie).not.toContain(".preview=");
+  expect(state.removed).toBe(true);
+});
+
+test("Draft timeouts are visible and cleanup aborts the control transport", async ({
+  page,
+}) => {
+  const result = await page.evaluate(async () => {
+    const { setupNextTestModeClient } = await import("/client.js");
+    const original = window.fetch;
+    window.fetch = (_url, init) =>
+      new Promise((_resolve, reject) =>
+        init.signal.addEventListener(
+          "abort",
+          () => reject(init.signal.reason),
+          { once: true },
+        ),
+      );
+    const errors = [];
+    const controller = setupNextTestModeClient({
+      enabled: true,
+      timeoutMs: 30,
+      onError: (error) => errors.push(error.message),
+    });
+    await controller.ready.catch(() => {});
+    const status = test.cache.status();
+    controller.stop();
+    window.fetch = original;
+    return { status, errors, removed: window.test === undefined };
+  });
+  expect(result.status).toMatchObject({
+    phase: "error",
+    draftEnabled: null,
+    cache: "unknown",
+  });
+  expect(result.errors[0]).toContain("timed out");
+  expect(result.removed).toBe(true);
+});
+
+test("custom Console namespaces cannot shadow built-in commands or leak a partial installation", async ({
+  page,
+}) => {
+  const result = await page.evaluate(() => {
+    const original = window.fetch;
+    let error;
+    try {
+      api.setupTestMode({
+        enabled: true,
+        overlay: { commands: { clear: () => {} } },
+      });
+    } catch (cause) {
+      error = cause.message;
+    }
+    return {
+      error,
+      restored: window.fetch === original,
+      removed: window.test === undefined,
+    };
+  });
+  expect(result).toEqual({
+    error: "Console command already exists: clear",
+    restored: true,
+    removed: true,
+  });
+});

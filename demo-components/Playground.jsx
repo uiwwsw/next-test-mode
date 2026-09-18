@@ -32,6 +32,7 @@ export default function Playground({
   const [active, setActive] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [cacheState, setCacheState] = useState(null);
   useEffect(() => {
     let live = true;
     const controller = window.demoTestMode;
@@ -56,7 +57,11 @@ export default function Playground({
       }
       controller.ready
         .then(() => {
-          if (live) setReady(true);
+          if (live) {
+            setReady(true);
+            setCacheState(controller.cache.status());
+            setActive(controller.cache.status().draftEnabled);
+          }
         })
         .catch((cause) => {
           if (live) setError(cause.message);
@@ -94,16 +99,21 @@ export default function Playground({
       setError(cause.message);
     }
   };
-  const reset = () => {
+  const controlCache = async (action) => {
+    setReady(false);
+    setError("");
     try {
-      const runtime = window.demoTestMode.runtime;
-      const before = snapshot(runtime);
-      runtime.clear();
-      setReady(before === snapshot(runtime));
-      setError("");
+      await window.demoTestMode.cache[action]();
+      setCacheState(window.demoTestMode.cache.status());
+      setActive(window.demoTestMode.cache.status().draftEnabled);
     } catch (cause) {
       setError(cause.message);
+    } finally {
+      setReady(true);
     }
+  };
+  const reset = () => {
+    void controlCache("restore");
   };
   const copy = async () => {
     try {
@@ -184,6 +194,38 @@ export default function Playground({
           <button onClick={copy} aria-label="콘솔 명령 복사">
             {copied ? "복사 완료 ✓" : "명령 복사 ↗"}
           </button>
+        </div>
+        <div className="cache-tools" aria-label="서버 캐시 제어">
+          <div>
+            <strong>콘솔에서 서버 캐시까지</strong>
+            <p data-cache-status>
+              {cacheState?.draftEnabled
+                ? "내 세션은 캐시를 우회하는 중"
+                : "기본 캐시 경로"}{" "}
+              · 공용 캐시는 유지됩니다.
+            </p>
+            <code>
+              test.cache.bypass() · test.cache.refresh() · test.cache.restore()
+            </code>
+          </div>
+          <div className="cache-actions">
+            <button
+              disabled={!ready}
+              onClick={() => {
+                void controlCache("bypass");
+              }}
+            >
+              서버 캐시 우회
+            </button>
+            <button
+              disabled={!ready}
+              onClick={() => {
+                void controlCache("refresh");
+              }}
+            >
+              다시 렌더
+            </button>
+          </div>
         </div>
         <div className="workspace">
           <section className="editor-pane">

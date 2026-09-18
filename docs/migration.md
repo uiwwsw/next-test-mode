@@ -24,3 +24,14 @@ Next.js 16.3.5 이상 17 미만의 App Router와 Node.js 20.9 이상이 필요�
 새 Next 연결은 Console 변경 후 Draft Mode를 확인하고 페이지를 새로고침합니다. SSR뿐 아니라 SSG·ISR도 세션별 미리보기가 됩니다. `test.clear()`는 이 도구가 연 Draft Mode를 종료하고 원래 캐시 경로로 돌아갑니다. JSON 상태는 세션 쿠키에 유지되며 새로고침만으로 지워지지 않습니다.
 
 범용 브라우저/Node 앱은 import 이름만 바꾸면 기존 API를 계속 사용할 수 있습니다. 범용 `setupTestMode()`의 기본 직접 JSON은 메모리에만 남습니다. Next peer는 선택적입니다.
+
+## 0.6 → 0.7: 테스트 폴더 분리
+
+```bash
+npm install @uiwwsw/next-test-mode@latest
+npx @uiwwsw/next-test-mode init --migrate
+```
+
+수정하지 않은 0.6 instrumentation 두 개와 Draft route를 얇은 연결 파일로 바꾸고 `test-mode/catalog`, `client`, `server`를 생성합니다. 이전 0.5 생성 파일도 지원합니다. 직접 수정한 hook/route는 덮어쓰지 않으므로 출력된 코드를 기존 연결에 합치세요. 생성된 테스트 폴더의 파일은 앱 소유이며 이후 init에서 보존합니다.
+
+기존 Console mock/patch/story API는 그대로입니다. `test.cache` 아래에 `status`, `bypass`, `refresh`, `restore`를 추가했습니다. 기존 수동 설치도 유지되지만, 새 구조의 production 번들 제외는 생성된 환경 가드를 사용하는 경우에 해당합니다. Console의 cache namespace는 Next 연결이 예약합니다.

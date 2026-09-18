@@ -159,6 +159,8 @@ const installExtensions = (
 export const installConsole = (
   testMode: TestMode,
   {
+    commands = {},
+    commandHelp = {},
     extensions = [],
     globalName = "test",
     installExtensions: shouldInstallExtensions = true,
@@ -298,6 +300,7 @@ export const installConsole = (
   );
   const help = (): TestModeConsoleHelp => ({
     commands: {
+      ...commandHelp,
       "test()": "Show this help.",
       "test('story.key')":
         "Apply a story when the key exists; otherwise toggle a feature entry.",
@@ -360,6 +363,11 @@ export const installConsole = (
     search: (input?: TestModeSearchInput) => testMode.search(input),
     story: storyCommand,
   });
+  for (const key of Object.keys(commands)) {
+    if (key in api)
+      throw new TypeError(`Console command already exists: ${key}`);
+    Object.defineProperty(api, key, { value: commands[key], enumerable: true });
+  }
   const cleanups: (() => void)[] = [];
   const cleanup = createCleanup(cleanups);
   try {
@@ -468,6 +476,8 @@ export const installTestModeOverlay = (
     document: documentRef = typeof document === "undefined"
       ? undefined
       : document,
+    commands = {},
+    commandHelp = {},
     extensions = [],
     globalName = "test",
     installConsole: shouldInstallConsole = true,
@@ -539,6 +549,8 @@ export const installTestModeOverlay = (
     if (shouldInstallConsole)
       cleanups.push(
         installConsole(testMode, {
+          commands,
+          commandHelp,
           extensions,
           globalName,
           installExtensions: false,
