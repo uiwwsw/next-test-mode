@@ -1,7 +1,7 @@
 {
   "name": "@uiwwsw/next-test-mode",
-  "version": "0.7.0",
-  "description": "Console-first Next.js test mode: keep fetch calls unchanged and preview CSR, SSR, ISR and SSG with session-isolated Draft Mode.",
+  "version": "1.0.0",
+  "description": "Test fetch data and page states from the console, including session-scoped previews of server-rendered and static Next.js pages.",
   "type": "module",
   "packageManager": "npm@11.16.0",
   "license": "MIT",
@@ -15,7 +15,8 @@
     "templates/test-mode",
     "CHANGELOG.md",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "README.ko.md"
   ],
   "exports": {
     ".": {
@@ -117,13 +118,13 @@
     "@types/node": "18.19.130",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "next": "16.3.5",
+    "next": "16.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "typescript": "5.9.3"
   },
   "peerDependencies": {
-    "next": ">=16.3.5 <17"
+    "next": ">=16.4.2 <17"
   },
   "peerDependenciesMeta": {
     "next": {

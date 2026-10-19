@@ -1,50 +1,47 @@
+**English** · [한국어](./README.ko.md)
+
 <p align="center">
-  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v0.7.0/docs/assets/hero.png" width="100%" alt="Next Test Mode — Same API calls. Your test data. CSR, SSR, ISR and SSG from one Console." />
+  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.0/docs/assets/hero.png" width="100%" alt="Next Test Mode — One console. Server data, too." />
 </p>
-<p align="center">
-  <strong>호출 코드는 그대로. 테스트 데이터는 따로. 확인은 콘솔에서.</strong><br />
-  Keep your fetch calls. Keep scenarios separate. Preview from DevTools.
-</p>
+<p align="center"><strong>Test Next.js API data and page states from the console.</strong><br />Keep your fetch calls. Try the data you need. Check the real page.</p>
 <p align="center">
   <a href="https://www.npmjs.com/package/@uiwwsw/next-test-mode"><img src="https://img.shields.io/npm/v/@uiwwsw/next-test-mode?style=flat-square&amp;color=173c36" alt="npm version" /></a>
   <a href="https://github.com/uiwwsw/next-test-mode/actions/workflows/ci.yml"><img src="https://github.com/uiwwsw/next-test-mode/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <img src="https://img.shields.io/badge/Next.js-App_Router-173c36?style=flat-square" alt="Next.js App Router" />
-  <a href="https://github.com/uiwwsw/next-test-mode/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-62796f?style=flat-square" alt="MIT license" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-62796f?style=flat-square" alt="MIT license" /></a>
 </p>
-<p align="center">
-  <a href="https://test-mode-tau.vercel.app/">Live demo ↗</a> ·
-  <a href="#quick-start">Quick start</a> ·
-  <a href="#rendering-support">지원 범위</a> ·
-  <a href="https://github.com/uiwwsw/next-test-mode/blob/main/docs/guide.md">API 가이드</a> ·
-  <a href="https://github.com/uiwwsw/next-test-mode/blob/main/docs/migration.md">기존 패키지에서 이전</a>
-</p>
+<p align="center"><a href="https://test-mode-tau.vercel.app/en">Live demo ↗</a> · <a href="#quick-start">Quick start</a> · <a href="#rendering-support">Compatibility</a> · <a href="./docs/guide.md">API guide</a></p>
 
-**Next Test Mode는 Next.js 앱의 API 응답을 콘솔에서 바꿔 화면 상태를 재현하는 개발·QA 도구입니다.** 빈 목록, 다른 가격, 서버 오류를 실제 화면에서 확인하세요. CSR은 브라우저 응답을 바꾸고, SSR·ISR·SSG는 **Next Draft Mode를 자동으로 연결해 해당 브라우저 세션에서 새로 렌더**합니다.
+**Reproduce the data and page states you need during development with one console command.** Next Test Mode is a development and QA tool for mocking and patching Next.js fetch responses: empty lists, different prices, server errors, and reusable scenarios, without editing individual API calls.
 
-> `@uiwwsw/test-mode`의 새 이름은 **`@uiwwsw/next-test-mode`**입니다. [이전 가이드](https://github.com/uiwwsw/next-test-mode/blob/main/docs/migration.md).
+The browser console alone cannot easily change HTML already rendered on the server or data fixed at build time. **Next Test Mode carries your console values to the server and opens a session-scoped preview path.** Just as you reproduce different page states in dev mode, you can use the same commands across browser, server, and static page examples.
+
+CSR, SSR, ISR and SSG demonstrate the reach of this workflow. Server previews use Next Draft Mode to bypass static and revalidation caches for your test session. They do not regenerate public static files or change other visitors' pages. Supported fetch-based data can be mocked or patched; direct database calls and other transports need separate integration.
+
+> `@uiwwsw/test-mode` is now **`@uiwwsw/next-test-mode`**. See the [migration guide](./docs/migration.md).
 
 ## Why Next Test Mode
 
-| 호출 코드는 그대로 | 테스트 데이터는 따로 | 확인은 콘솔에서 |
+| Keep your calls | Test from the console | Save reusable scenarios |
 | :--- | :--- | :--- |
-| 최초 설정 후 기존 `fetch()`를 계속 사용합니다. 각 API 호출부에 테스트 함수나 조건 분기를 추가할 필요가 없습니다. | 한 번 확인할 값은 콘솔에서 끝내고, 반복할 시나리오는 `src/test-mode/` 같은 전용 폴더에서 수정하고 공유합니다. | `test.patch()` 한 줄로 가격을 바꾸고 `test.mock()`으로 빈 목록·오류를 넣습니다. `test.clear()`로 원래 응답에 돌아갑니다. |
+| Connect once and keep existing `fetch()` calls. No per-call test branches. | Change values, reload automatically, and check the actual page, including server HTML. | Keep repeated tests in a dedicated folder shared by the browser and server. |
 
 ```ts
-// 앱의 API 호출: 테스트를 켜도 이 코드는 그대로입니다.
+// Your application code stays the same.
 const response = await fetch('https://api.example.com/api/cart');
 const cart = await response.json();
 ```
 
 ```js
-// DevTools → Console: 자신의 API pathname을 사용하세요.
+// DevTools → Console: use your own API pathname.
 test.patch('/api/cart', { total: 9.99 });
-// Draft Mode 연결 → 자동 새로고침 → 바뀐 데이터로 화면 확인
+// Draft Mode connects automatically and the page refreshes.
 test.clear();
 ```
 
 ## Quick start
 
-Next.js **16 App Router / Node.js 20.9+** 프로젝트 루트에서:
+From a **Next.js 16 App Router / Node.js 20.9+** project:
 
 ```bash
 npm install @uiwwsw/next-test-mode
@@ -52,99 +49,87 @@ npx @uiwwsw/next-test-mode init
 npm run dev
 ```
 
-설치 명령이 `app/` 또는 `src/app/`, JavaScript/TypeScript를 감지해 **얇은 연결 파일 세 개와 테스트 전용 폴더**를 생성합니다.
+The installer detects `app/` or `src/app/` and JavaScript or TypeScript. It generates three thin integration files and a dedicated test folder:
 
-| 파일 | 하는 일 |
+| File | Purpose |
 | :--- | :--- |
-| `instrumentation.ts` 또는 `.js` | 서버의 기존 fetch에 요청별 테스트 데이터 연결 |
-| `instrumentation-client.ts` 또는 `.js` | Console·브라우저 fetch·Draft Mode·자동 새로고침 연결 |
-| `app/api/next-test-mode/route.ts` 또는 `.js` | Next.js의 Draft Mode 쿠키를 켜고 끄는 POST 경로 |
+| `instrumentation.ts` or `.js` | Connect request-scoped test data to existing server fetch calls |
+| `instrumentation-client.ts` or `.js` | Connect the console, browser fetch, Draft Mode and automatic refresh |
+| `app/api/next-test-mode/route.ts` or `.js` | POST route to enable or disable the Next.js Draft Mode cookie |
 
 ```text
-src/                         # src 없는 앱은 프로젝트 루트
-  app/                       # 실제 페이지와 API: 테스트 폴더를 import하지 않음
+src/                      # Project root when there is no src/
+  app/                    # Real pages and APIs do not import the test folder
   test-mode/
-    catalog.ts               # mock · patch · story: 이곳만 편집
-    client.ts                # Console와 브라우저 연결
-    server.ts                # 서버 fetch와 Draft 연결
+    catalog.ts            # Edit mock, patch and story definitions here
+    client.ts             # Console and browser integration
+    server.ts             # Server fetch and Draft integration
 ```
 
-테스트 정의는 `catalog.ts` 한 곳에 두고 브라우저와 서버가 함께 사용합니다. 일반 production 빌드에서는 조건부 연결이 제거됩니다. CI는 **테스트 카탈로그가 브라우저·서버 번들에서 빠지는지** 실제 빌드 산출물로 확인합니다. QA 빌드에는 의도적으로 포함됩니다.
+Browser and server share one catalog. The generated conditional integration excludes the test catalog from ordinary production builds; CI checks the actual client and server bundles. QA builds intentionally include it.
 
-페이지, API 함수, Next 설정 파일은 수정하지 않습니다. 기존 사용자 파일이 있으면 변경 없이 합칠 코드를 출력합니다. 워커나 별도 서버는 필요하지 않습니다.
+The installer leaves pages, API functions and Next configuration untouched. If an integration file already exists, it prints the code to merge without overwriting the file. No worker or separate server is required.
 
-기본 설정은 개발 환경에서만 켜집니다. **QA 배포에서도 사용하려면 `NEXT_PUBLIC_NEXT_TEST_MODE=1`을 빌드와 실행 환경에 설정**하세요. [생성 코드와 접근 제어](https://github.com/uiwwsw/next-test-mode/blob/main/docs/server-rendering.md).
+Development is enabled by default. To use an intentional QA deployment, set **`NEXT_PUBLIC_NEXT_TEST_MODE=1` at build time and runtime**. Your application owns access control. See [generated setup and authorization](./docs/server-rendering.md).
 
 ## See it in action
 
-**[CSR](https://test-mode-tau.vercel.app/csr) · [SSR](https://test-mode-tau.vercel.app/ssr) · [ISR](https://test-mode-tau.vercel.app/isr) · [SSG](https://test-mode-tau.vercel.app/ssg)** — 같은 장바구니를 네 가지 렌더 방식으로 직접 비교하세요.
+Open the [English demo](https://test-mode-tau.vercel.app/en) or [한국어 데모](https://test-mode-tau.vercel.app/). Change a cart value first, then visit the server and static examples to see the same value in their rendered HTML.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v0.7.0/docs/assets/scenarios.gif" width="960" alt="실제 Next.js 데모: SSG 원래 가격, 콘솔 patch, SSR에서도 같은 값, HTTP 503, 원래 캐시 응답 복귀." />
-</p>
+[CSR](https://test-mode-tau.vercel.app/en/csr) · [SSR](https://test-mode-tau.vercel.app/en/ssr) · [ISR](https://test-mode-tau.vercel.app/en/isr) · [SSG](https://test-mode-tau.vercel.app/en/ssg)
 
-데모의 DevTools Console에 입력하거나, 화면의 JSON 편집기에서 원하는 값을 적용하세요.
+<p align="center"><img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.0/docs/assets/scenarios.gif" width="960" alt="Console patch changes a static cart preview and server HTML; mock an HTTP error, then restore the original response." /></p>
+
+Use DevTools Console or the demo's JSON editor:
 
 ```js
 test.patch('/api/cart.json', { total: 9.99 });
 test.mock('/api/cart.json', { items: [], total: 0 });
 test.mock('/api/cart.json', { message: 'Try again' }, { status: 503 });
-test.overrides();               // 직접 입력한 값 확인
-test.reset('/api/cart.json');   // 이 경로의 직접 입력만 제거
-test.clear();                  // 모든 입력과 시나리오 해제
+test.overrides();               // Inspect console overrides
+test.reset('/api/cart.json');   // Remove direct overrides for this path
+test.clear();                  // Clear all overrides and scenarios
 ```
 
-SSR·ISR·SSG 탭에서는 **서버가 보낸 HTML 자체에 변경된 값이 들어갑니다.** 다른 브라우저 세션의 원래 응답은 유지됩니다. JSON 상태는 같은 브라우저의 탭이 공유하며 새로고침 후에도 유지됩니다. 테스트가 끝나면 `test.clear()`를 사용하세요.
+Server previews put the changed data in the **HTML returned by the server**. Other browser sessions keep their original responses. Values survive reloads and are shared by tabs in the same browser. Finish with `test.clear()`.
 
 ## Rendering support
 
-| 렌더 방식 | Console 변경 후 동작 |
+In development and QA, browser fetch interception handles CSR. Server requests read test values from cookies. Next Draft Mode bypasses static and revalidation caches for that session, allowing a fresh HTML preview even for an SSG or ISR page.
+
+| Rendering path | After a console change |
 | :--- | :--- |
-| **CSR** | 브라우저 fetch 응답 교체 또는 patch, 페이지 자동 새로고침 |
-| **SSR / Server Components** | 해당 요청의 서버 fetch에 값 적용 → 새 HTML |
-| **SSG / `force-static`** | Draft Mode에서 정적 결과를 우회해 세션별 동적 미리보기 |
-| **ISR** | Draft Mode에서 기존 페이지·데이터 캐시를 우회해 미리보기. 공용 ISR 결과는 변경하지 않음 |
-| **`unstable_cache` / `use cache`** | Draft Mode의 캐시 우회 경로에서 실행되는 fetch에 적용 |
-| **`generateStaticParams`** | 빌드에서 생성한 경로의 페이지 미리보기 지원. 콘솔로 빌드 시 경로 목록을 다시 만들지는 않음 |
+| **CSR** | Intercept or patch browser fetch responses, then refresh |
+| **SSR / Server Components** | Apply values to request-scoped server fetch calls and render new HTML |
+| **SSG / `force-static`** | Bypass the static result through a session-scoped Draft Mode preview |
+| **ISR** | Bypass the page and data cache for the preview; retain the shared ISR result |
+| **`unstable_cache` / `use cache`** | Apply to fetch calls executed through the Draft Mode cache-bypass path |
+| **`generateStaticParams`** | Preview existing generated routes; console commands do not regenerate the build-time route list |
 
-`test.clear()`는 이 도구가 연 Draft Mode를 해제해 원래 캐시 경로로 복귀합니다. **SSG 파일을 다시 쓰거나 모든 방문자의 ISR 캐시를 갱신하는 기능은 아닙니다.** 이미 켜진 CMS Draft 세션은 해제하지 않습니다.
+`test.clear()` releases Draft Mode owned by this tool and returns to the default cache path. Existing CMS Draft sessions are preserved.
 
-실제 production 빌드로 검증한 기준은 **Next.js 16.3.5 / App Router / Node 런타임**입니다. Pages Router, Edge, `output: 'export'`는 자동 연결 대상이 아닙니다. 직접 DB 조회, XHR·WebSocket, fetch를 거치지 않는 외부 캐시에도 별도 어댑터가 필요합니다. 캐시 내부의 요청 쿠키를 읽는 작은 Next 내부 브리지가 있어, Next 버전 업그레이드 시 production 회귀 테스트가 필요합니다. [동작 원리와 호환성](https://github.com/uiwwsw/next-test-mode/blob/main/docs/server-rendering.md).
+Validated against **Next.js 16.4.2 / App Router / Node runtime** with real production builds. Pages Router, Edge and `output: 'export'` are outside automatic integration. Direct database reads, XHR, WebSocket and external caches that do not use fetch need adapters. A small bridge reads request cookies inside cached Next scopes; rerun production regression tests when upgrading Next. [How it works and compatibility](./docs/server-rendering.md).
 
 ## Console controls the server preview
 
-콘솔에서 바꾼 값이 서버에서 렌더한 HTML까지 바뀌는 것이 핵심입니다. **데이터를 조작하지 않고 캐시만 우회해서 실제 응답을 다시 확인할 수도 있습니다.**
+Mock and patch commands connect the preview automatically. You can also bypass caches to inspect fresh real data without changing it:
 
 ```js
-test.cache.bypass();  // 내 Next Draft 세션에서 새 서버 렌더. mock 없어도 사용 가능
-test.cache.status();  // 연결 상태, Draft 활성 여부, 미반영 변경, 오류 확인
-test.cache.refresh(); // 같은 값으로 다시 렌더
-test.cache.restore(); // 테스트 입력·시나리오·수동 우회 해제, 기본 캐시 경로 복귀
+test.cache.bypass();  // Keep existing overrides and open a server preview
+test.cache.status();  // Inspect Draft status, pending changes and errors
+test.cache.refresh(); // Render again with the same values
+test.cache.restore(); // Clear tests and return to the default cache path
 ```
 
-`bypass()`는 기존 mock/patch를 유지합니다. `refresh()`는 Draft가 켜져 있을 때 새 서버 렌더를 요청하며, 꺼져 있으면 기존 캐시 정책을 따릅니다.
-
-일반 mock/patch는 캐시 우회를 자동으로 연결하므로 이 명령들을 따로 호출할 필요가 없습니다. `test.clear()`도 전체 테스트를 해제합니다. 초기화 시 기존 CMS Draft 세션은 유지합니다.
-
-**제어 범위는 내 브라우저 세션의 Next 렌더링·데이터 캐시 경로입니다.** 공용 캐시를 삭제하지 않으며, 브라우저 HTTP 캐시·SWR/React Query·Redis·외부 CDN을 일괄 무효화하지 않습니다. [캐시별 동작과 설계](https://github.com/uiwwsw/next-test-mode/blob/main/docs/concept.md).
+`refresh()` requests a fresh server render while Draft Mode is active; otherwise the existing cache policy applies. `test.clear()` also ends all tests. These controls cover your session's Next rendering and data cache path, not shared cache deletion, browser HTTP caches, SWR/React Query, Redis or external CDNs. [Cache behavior and design](./docs/concept.md).
 
 ## Try once, or keep it in a folder
 
-**잠깐 확인할 테스트는 콘솔에서 끝내세요.** `test.mock()` / `test.patch()` → 화면 확인 → `test.clear()`. 임시 실험 때문에 파일이나 API 호출 코드를 고칠 필요가 없습니다.
+For a one-off check, use `test.mock()` or `test.patch()`, inspect the page, then `test.clear()`. No temporary file or API call edits are needed.
 
-**반복할 테스트는 `init`이 생성한 `test-mode/catalog.ts`에서 관리하세요.**
-
-```text
-src/
-  api/cart.ts                # 기존 API 호출
-  test-mode/
-    catalog.ts               # 브라우저·서버에서 공유할 등록 목록
-    features/cart.ts         # API별 mock / patch와 데이터
-    stories/cart.stories.ts  # 여러 API를 묶은 화면 시나리오
-```
+Keep repeated tests in the generated `test-mode/catalog.ts` and split larger catalogs into feature and story files:
 
 ```ts
-// src/test-mode/catalog.ts
 import { defineMock } from '@uiwwsw/next-test-mode/core';
 
 export const catalog = {
@@ -158,22 +143,22 @@ export const catalog = {
 };
 ```
 
-생성된 두 설치 파일이 같은 catalog를 자동으로 읽습니다. Console에서 `test.feat.add('/api/cart:empty')`로 선택하세요. 여러 API를 묶은 story도 `test.story('cart.empty')`로 활성화합니다. 서버에서도 쓸 정의에는 브라우저 전용 코드를 넣지 마세요.
+Select this case with `test.feat.add('/api/cart:empty')`. Activate a story spanning multiple APIs with `test.story('cart.empty')`. Definitions used by the server must avoid browser-only code.
 
-`init`을 다시 실행해도 편집한 테스트 폴더를 덮어쓰지 않습니다. 0.5/0.6의 변경하지 않은 자동 생성 설정은 `init --migrate`로 옮길 수 있습니다. 사용자 코드가 섞인 연결 파일은 변경 없이 합칠 내용을 안내합니다.
+Running `init` again preserves the edited test folder. `init --migrate` migrates unchanged generated 0.5/0.6 setup; customized integration files receive manual merge instructions. [Migration guide](./docs/migration.md).
 
 ## Details that matter
 
-- 직접 입력은 **GET + 정확한 pathname**에 매칭합니다. 다른 메서드는 `{ method: 'POST' }` 옵션으로 지정합니다. 여러 호스트의 같은 pathname은 함께 매칭됩니다.
-- `patch`는 실제 응답의 최상위 필드를 덮어씁니다. 중첩 객체와 배열은 통째로 교체되며, 실제 네트워크 요청은 실행됩니다. `mock`은 매칭된 요청의 응답을 직접 만듭니다.
-- 쿠키로 전달하는 전체 선택·JSON 상태는 URL 인코딩 후 **3,500바이트**까지입니다. 큰 응답은 작은 patch 또는 파일에 정의한 시나리오로 관리하세요. 브라우저 세션 복원 설정에 따라 쿠키도 복원될 수 있습니다.
-- Draft 연결 실패는 Console 오류와 `next-test-mode:error` 이벤트로 알리며 자동 새로고침하지 않습니다. `ready` / `sync()`로 성공 여부를 기다릴 수 있습니다. [클라이언트 API](https://github.com/uiwwsw/next-test-mode/blob/main/docs/server-rendering.md#클라이언트-연결-상태).
-- 테스트 쿠키는 로그인 자격이 아닙니다. QA 환경의 접근 권한은 앱이 관리합니다. 들어온 인증 쿠키를 외부 API에 자동 전달하지 않습니다.
-- 이 패키지는 **화면 상태를 재현하는 도구**입니다. 자동 assertion·합격 판정은 Playwright나 Vitest가 담당합니다.
+- Direct overrides match **GET plus exact pathname** by default. Specify other methods with `{ method: 'POST' }`. Identical pathnames on different hosts match together.
+- `patch` overwrites top-level fields of the real response. Nested objects and arrays are replaced as a whole; the network request still runs. `mock` supplies the matching response directly.
+- The total URL-encoded cookie state is limited to **3,500 bytes**. Use a small patch or a file-defined scenario for larger responses. Browser session restoration may restore cookies too.
+- Draft connection failures emit a console error and `next-test-mode:error`; they do not trigger a reload. Await `ready` or `sync()` to verify success. [Client API](./docs/server-rendering.md#클라이언트-연결-상태).
+- Test cookies are not authentication. The application controls QA access. Incoming authentication cookies are not automatically forwarded to external APIs.
+- This tool reproduces page states. Use Playwright or Vitest for automated assertions and pass/fail results.
 
 ## Framework-independent APIs
 
-기존 범용 core·browser·Node API도 새 이름 아래 유지합니다. Next.js는 선택적 peer이며, 범용 API는 Next 없이 설치할 수 있습니다. 외부 런타임 의존성은 없습니다.
+The core, browser and Node APIs remain available under the new package name. Next.js is an optional peer; generic APIs work without it. There are no external runtime dependencies.
 
 ```ts
 import { setupTestMode } from '@uiwwsw/next-test-mode';
@@ -183,19 +168,19 @@ import { withTestMode } from '@uiwwsw/next-test-mode/node';
 import { createServerTestMode } from '@uiwwsw/next-test-mode/server';
 ```
 
-일반 브라우저 앱은 `setupTestMode({ enabled: true, refresh: () => refetch() })`를 시작 시 한 번 연결합니다. 이 범용 설정의 직접 JSON은 기본적으로 메모리에만 남습니다. Next에서는 Draft Mode를 연결하는 `init` 설정을 사용하세요. [전체 API 가이드](https://github.com/uiwwsw/next-test-mode/blob/main/docs/guide.md).
+For a generic browser application, connect `setupTestMode({ enabled: true, refresh: () => refetch() })` once at startup. Direct JSON overrides stay in memory by default. Use the generated `init` integration for Next Draft Mode. [Full API guide](./docs/guide.md) (Korean).
 
 ## Develop & release
 
 ```bash
 npm ci
 npx playwright install chromium
-npm run ci             # 타입, 런타임, tarball 설치와 소비자 타입 검사
-npm run test:browser   # 브라우저 Console·fetch·Draft 연결
-npm run test:next      # 실제 Next dev/production/Cache Components/비활성 배포
-npm run test:demo      # 네 렌더 모드와 모바일 JSON 편집기
-npm run dev:demo       # 실제 Next.js 데모
-npm run build:demo     # Vercel 배포용 Next 빌드
+npm run ci             # Types, runtime tests, tarball installation and consumer types
+npm run test:browser   # Browser console, fetch and Draft integration
+npm run test:next      # Next dev, production, Cache Components and disabled builds
+npm run test:demo      # Rendering examples, localized SEO and mobile editor
+npm run dev:demo       # Next.js demo
+npm run build:demo     # Vercel production build
 ```
 
-검증된 main의 릴리스 태그를 GitHub Release로 발행하면, CI를 다시 통과한 패키지가 `NPM_TOKEN`을 사용하는 Actions에서 npm provenance와 함께 배포됩니다. [배포 절차](https://github.com/uiwwsw/next-test-mode/blob/main/docs/releasing.md) · [설계](https://github.com/uiwwsw/next-test-mode/blob/main/docs/architecture.md) · [Changelog](https://github.com/uiwwsw/next-test-mode/blob/main/CHANGELOG.md).
+A GitHub Release from a verified main tag triggers CI and npm publishing with provenance. Stable releases use `latest`. Version 1.0.0 retains the 0.7 public APIs. [Release process](./docs/releasing.md) · [Architecture](./docs/architecture.md) · [Changelog](./CHANGELOG.md).

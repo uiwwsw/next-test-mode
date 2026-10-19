@@ -1,10 +1,10 @@
 import { chromium, expect } from "@playwright/test";
 import { spawn, execFileSync } from "node:child_process";
-import { mkdir, readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { readFile, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 const output = resolve("docs/assets");
-const frames = resolve("test-results/doc-frames");
-await mkdir(frames, { recursive: true });
+const frames = await mkdtemp(join(tmpdir(), "next-test-mode-doc-frames-"));
 const server = spawn(
   process.execPath,
   ["node_modules/next/dist/bin/next", "start", "-H", "127.0.0.1", "-p", "4174"],
@@ -31,15 +31,18 @@ try {
     path: resolve(output, "hero.png"),
     omitBackground: true,
   });
+  await hero.setViewportSize({ width: 1200, height: 630 });
+  await hero.setContent(`<style>html,body{margin:0;background:#f3f7f6}body{height:630px;display:flex;align-items:center}svg{display:block}</style>${await readFile(resolve(output, "hero.svg"), "utf8")}`);
+  await hero.screenshot({ path: resolve(output, "social-card.png"), scale: "css" });
   await hero.close();
   const page = await browser.newPage({
     viewport: { width: 1200, height: 1100 },
     deviceScaleFactor: 1,
   });
-  await page.goto("http://127.0.0.1:4174/ssg");
+  await page.goto("http://127.0.0.1:4174/en/ssg");
   const ready = () =>
     expect(
-      page.getByRole("button", { name: "적용하고 화면 확인" }),
+      page.getByRole("button", { name: "Apply and check the page" }),
     ).toBeEnabled();
   const capture = (name) =>
     page
@@ -58,7 +61,7 @@ try {
     path: resolve(output, "playground.png"),
     fullPage: true,
   });
-  await page.goto("http://127.0.0.1:4174/ssr");
+  await page.goto("http://127.0.0.1:4174/en/ssr");
   await ready();
   await expect(page.locator("[data-demo-total]")).toHaveText("9.99");
   await capture("server");
@@ -75,13 +78,13 @@ try {
   await page.evaluate(() => window.test.clear());
   await expect(page.locator("[data-demo-total]")).toHaveText("42");
   await ready();
-  await page.goto("http://127.0.0.1:4174/ssg");
+  await page.goto("http://127.0.0.1:4174/en/ssg");
   await ready();
   await page.evaluate(() => {
     void window.test.cache.bypass();
   });
   await expect(page.locator("[data-cache-status]")).toContainText(
-    "우회하는 중",
+    "bypassing caches",
   );
   await ready();
   await capture("fresh");
@@ -89,7 +92,7 @@ try {
     void window.test.cache.restore();
   });
   await expect(page.locator("[data-cache-status]")).toContainText(
-    "기본 캐시 경로",
+    "Default cache path",
   );
   await ready();
   await capture("reset");
@@ -113,6 +116,7 @@ normalized[0].save(sys.argv[2],save_all=True,append_images=normalized[1:],durati
     ],
     { stdio: "inherit" },
   );
+  await rm(frames, { recursive: true });
   console.log(
     "Rendered Next Test Mode hero, real production playground and animated SSG/SSR Console demo.",
   );

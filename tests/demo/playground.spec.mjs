@@ -103,3 +103,43 @@ test("demo can bypass server caches without mock data and restore the static res
     "기본 캐시 경로",
   );
 });
+
+for (const locale of ['ko', 'en']) {
+  test(`${locale} pages expose localized server HTML and reciprocal search metadata`, async ({ request }) => {
+    for (const path of ['', '/csr', '/ssr', '/isr', '/ssg']) {
+      const prefix = locale === 'en' ? '/en' : '';
+      const response = await request.get(`${prefix}${path || '/'}`);
+      expect(response.status()).toBe(200);
+      const html = await response.text();
+      expect(html).toContain(`<html lang="${locale}">`);
+      expect(html).toContain(locale === 'en' ? 'Test server data, too.' : '서버 데이터까지 테스트.');
+      expect(html).toContain(`rel="canonical" href="https://test-mode-tau.vercel.app${prefix}${path}"`);
+      expect(html).toContain(`hrefLang="ko" href="https://test-mode-tau.vercel.app${path}"`);
+      expect(html).toContain(`hrefLang="en" href="https://test-mode-tau.vercel.app/en${path}"`);
+      expect(html).toContain('name="twitter:card" content="summary_large_image"');
+      expect(html).toContain('application/ld+json');
+    }
+    const sitemap = await request.get('/sitemap.xml');
+    expect(sitemap.ok()).toBe(true);
+    expect(await sitemap.text()).toContain('https://test-mode-tau.vercel.app/en/ssr');
+    const robots = await request.get('/robots.txt');
+    expect(await robots.text()).toContain('Sitemap: https://test-mode-tau.vercel.app/sitemap.xml');
+  });
+}
+
+test('English console values reach static and server HTML and language navigation works on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto('/en/ssg');
+  await expect(page.locator('#json-input')).toBeEnabled();
+  await page.evaluate(() => window.test.patch('/api/cart.json', { total: 7.25 }));
+  await expect(page.locator('[data-demo-total]')).toHaveText('7.25');
+  await page.getByRole('link', { name: 'SSR Server' }).click();
+  await expect(page).toHaveURL(/\/en\/ssr$/);
+  await expect(page.locator('[data-demo-total]')).toHaveText('7.25');
+  await expect(page.getByRole('heading', { name: 'Result rendered into server HTML' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole('link', { name: '한국어', exact: true }).click();
+  await expect(page).toHaveURL(/\/ssr$/);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
+  await expect(page.locator('[data-demo-total]')).toHaveText('7.25');
+});

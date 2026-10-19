@@ -18,7 +18,7 @@ const fixture = (context, typescript = false) => {
   context.after(() => rmSync(root, { recursive: true, force: true }));
   writeFileSync(
     join(root, "package.json"),
-    JSON.stringify({ dependencies: { next: "16.3.5" } }),
+    JSON.stringify({ dependencies: { next: "16.4.2" } }),
   );
   if (typescript) writeFileSync(join(root, "tsconfig.json"), "{}");
   return root;

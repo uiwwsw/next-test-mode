@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "runtime": "nextjs+vercel",
+  "execution": "automatic",
+  "requireCleanGit": true,
+  "verify": ["npm ci", "npm run ci", "npm run build:demo"],
+  "deploy": ["env VERCEL_ORG_ID=team_rDak9bbSNX7P2zOvDhhnARwh VERCEL_PROJECT_ID=prj_OtJaW3mZSEIG1xFUjA1uZAndkZLK vercel deploy --prod --yes --scope uiwwsws-projects"],
+  "healthchecks": [
+    "https://test-mode-tau.vercel.app/",
+    "https://test-mode-tau.vercel.app/en",
+    "https://test-mode-tau.vercel.app/robots.txt",
+    "https://test-mode-tau.vercel.app/sitemap.xml",
+    "https://test-mode-tau.vercel.app/social-card.png",
+    "https://test-mode-tau.vercel.app/api/cart.json"
+  ]
+}

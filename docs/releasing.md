@@ -10,7 +10,7 @@ npm run test:demo
 npm pack
 ```
 
-PR/main CI는 Node.js 20.9 / 22 / 24, Chromium, 실제 Next.js 16.3.5를 검증합니다. tarball을 독립 앱에 설치해 ESM·타입·스타터·CLI를 확인합니다. Next fixture는 dev, production의 SSR·SSG·ISR·force-static·생성 경로·unstable_cache, Cache Components/use cache, 비활성 production을 각각 검사합니다. 테스트 카탈로그가 비활성 production의 브라우저·서버 번들에서 제외되는지, 첫 CSR fetch부터 가로채는지도 검사합니다. 공개 데모는 네 렌더 모드·모바일 JSON 입력·데이터 조작 없는 캐시 우회/복귀를 검사합니다.
+PR/main CI는 Node.js 20.9 / 22 / 24, Chromium, 실제 Next.js 16.4.2를 검증합니다. tarball을 독립 앱에 설치해 ESM·타입·스타터·CLI를 확인합니다. Next fixture는 dev, production의 SSR·SSG·ISR·force-static·생성 경로·unstable_cache, Cache Components/use cache, 비활성 production을 각각 검사합니다. 테스트 카탈로그가 비활성 production의 브라우저·서버 번들에서 제외되는지, 첫 CSR fetch부터 가로채는지도 검사합니다. 공개 데모는 네 렌더 모드·모바일 JSON 입력·데이터 조작 없는 캐시 우회/복귀를 검사합니다.
 
 ## npm
 
@@ -39,3 +39,12 @@ npm [Trusted publishing](https://docs.npmjs.com/trusted-publishers/)을 설정�
 ## 문서 이미지
 
 `npm run docs:assets`는 Next production 데모를 Chromium으로 촬영하고 README의 PNG/GIF를 만듭니다. Python 3과 Pillow가 필요합니다. 이미지는 GitHub 릴리스 태그의 절대 URL로 제공하며 npm tarball에는 넣지 않습니다. README 이미지 URL의 태그도 새 릴리스에 맞추세요.
+
+
+## 다국어와 검색 메타데이터
+
+기본 URL은 한국어, `/en`은 영어입니다. 두 locale은 동일한 Playground와 테스트 API를 공유합니다. 렌더 예제별로 canonical·ko/en/x-default alternate·Open Graph·Twitter 메타데이터를 서버 HTML에 생성하며 루트 레이아웃의 `lang`도 각각 유지합니다. `app/robots.js`와 `app/sitemap.js`가 크롤링 경로를 제공합니다. 배포 후 `/`, `/en`, `/sitemap.xml`, `/robots.txt`, `/social-card.png`의 공개 응답을 확인하세요.
+
+README.md는 영어, README.ko.md는 한국어이며 모두 npm 패키지에 포함됩니다. 공유 이미지는 커밋된 `docs/assets/social-card.png`에서 배포 시 복사합니다. `npm run docs:assets`로 촬영 후 이미지도 함께 커밋하세요. Google Search Console의 sitemap 제출과 색인 현황은 사이트 소유자 계정에서 별도로 확인할 수 있습니다.
+
+워크스페이스에서는 `devctl doctor next-test-mode`, `devctl deploy next-test-mode`로 계획을 확인한 뒤 `devctl deploy next-test-mode --execute`로 연결된 기존 Vercel 프로젝트에 배포합니다. 공개 URL healthcheck가 모두 통과해야 완료입니다.

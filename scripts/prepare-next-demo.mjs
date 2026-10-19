@@ -10,3 +10,6 @@ await cp("dist", "public/playground/dist", {
   recursive: true,
   filter: (path) => !path.endsWith(".ts") && !path.endsWith(".map"),
 });
+
+// Share previews use a committed image, so deployments do not depend on GitHub.
+await cp("docs/assets/social-card.png", "public/social-card.png");

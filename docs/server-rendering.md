@@ -76,7 +76,7 @@ Worker는 서버의 fetch를 가로챌 수 없으므로 이 연결을 대체하�
 | `generateStaticParams` | 생성된 경로의 페이지 데이터 미리보기 | 빌드 시 매개변수 목록은 콘솔로 재생성하지 않음 |
 | `unstable_cache` / `use cache` | Draft의 캐시 우회 중 실행하는 fetch 변경 | 사용자 정의 외부 캐시·직접 DB 호출까지 가로채지 않음 |
 
-App Router의 **Next.js 16.3.5, Node.js 20.9 이상**을 기준으로 검증했습니다. 패키지의 Next peer 범위는 `>=16.3.5 <17`입니다. 그 범위의 모든 향후 버전을 검증했다는 뜻은 아닙니다. **Pages Router, Edge, `output: 'export'`는 자동 연결 대상이 아닙니다.** 정적 export에는 Draft 쿠키를 만들고 페이지를 다시 렌더할 서버가 없습니다.
+App Router의 **Next.js 16.4.2, Node.js 20.9 이상**을 기준으로 검증했습니다. 패키지의 Next peer 범위는 `>=16.4.2 <17`입니다. 그 범위의 모든 향후 버전을 검증했다는 뜻은 아닙니다. **Pages Router, Edge, `output: 'export'`는 자동 연결 대상이 아닙니다.** 정적 export에는 Draft 쿠키를 만들고 페이지를 다시 렌더할 서버가 없습니다.
 
 이미 CMS가 켜 둔 Draft 세션은 `test.clear()`로 종료하지 않습니다. 도구가 처음 연 세션만 소유 표시 쿠키로 추적합니다. CMS와 같은 브라우저에서 테스트 중 CMS가 세션의 소유권을 바꾸는 복잡한 흐름에는 앱이 별도 세션 정책을 정해야 합니다.
 

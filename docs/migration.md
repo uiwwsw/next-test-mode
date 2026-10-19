@@ -15,7 +15,7 @@ npm run dev
 
 앱 소유의 시나리오 파일에 남은 import도 `@uiwwsw/test-mode`에서 `@uiwwsw/next-test-mode`로 바꾸세요. 새 브라우저 연결은 `/client`의 `setupNextTestModeClient`입니다. 기존 `setupTestMode({ ssr: true })`와 중복 설치하지 마세요. 서버는 `/next`의 `setupNextTestMode`를 사용합니다.
 
-Next.js 16.3.5 이상 17 미만의 App Router와 Node.js 20.9 이상이 필요합니다. 검증된 Next 버전은 16.3.5입니다. QA 배포는 `NEXT_PUBLIC_NEXT_TEST_MODE=1`을 빌드와 실행 환경에 설정하고 재배포하세요. Pages Router와 Edge, 순수 정적 export는 자동 이전 대상이 아닙니다.
+Next.js 16.4.2 이상 17 미만의 App Router와 Node.js 20.9 이상이 필요합니다. 검증된 Next 버전은 16.4.2입니다. QA 배포는 `NEXT_PUBLIC_NEXT_TEST_MODE=1`을 빌드와 실행 환경에 설정하고 재배포하세요. Pages Router와 Edge, 순수 정적 export는 자동 이전 대상이 아닙니다.
 
 ## 유지되는 API
 

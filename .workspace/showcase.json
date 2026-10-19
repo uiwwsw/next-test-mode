@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "id": "next-test-mode",
+  "visibility": "public",
+  "name": "Next Test Mode",
+  "en": "Next Test Mode",
+  "category": "개발 도구",
+  "symbol": "▷",
+  "color": "#b0cec3",
+  "summary": "콘솔 한 줄로 서버 데이터와 화면 상태까지 테스트.",
+  "description": "기존 fetch 호출을 유지하며 콘솔에서 API 응답과 화면 상태를 재현하는 Next.js 개발·QA 도구입니다. 서버·정적 페이지도 세션별 Draft 미리보기로 확인하고, 반복할 시나리오는 별도 폴더로 공유합니다.",
+  "features": [
+    "콘솔에서 API 응답 mock·patch",
+    "세션별 서버·정적 화면 미리보기",
+    "한국어·영어 데모와 설치 안내"
+  ],
+  "status": "live",
+  "links": [
+    {
+      "platform": "web",
+      "url": "https://test-mode-tau.vercel.app/"
+    },
+    {
+      "platform": "source",
+      "url": "https://github.com/uiwwsw/next-test-mode"
+    },
+    {
+      "platform": "package",
+      "url": "https://www.npmjs.com/package/@uiwwsw/next-test-mode"
+    }
+  ],
+  "evidence": {
+    "verifiedAt": "2026-10-19",
+    "note": "기존 공개 데모 HTTP 200 및 MOVV 공개 services.json 등재 확인. 1.0 변경은 Next.js 16.4.2에서 콘솔→서버 HTML, 세션 격리, 캐시 복귀 및 비활성 production 검증 완료. 공개 배포 후 healthcheck로 재확인."
+  }
+}

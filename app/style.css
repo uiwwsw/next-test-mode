@@ -664,3 +664,9 @@ textarea:disabled {
     flex: 1;
   }
 }
+
+.language-nav { display: flex; justify-content: flex-end; gap: 1rem; margin-bottom: 1.5rem; font-size: .875rem; }
+.language-nav a[aria-current="page"] { font-weight: 800; text-decoration: underline; text-underline-offset: 5px; }
+html[lang="en"] .intro h1 { font-size: clamp(2.2rem, 5vw, 4.8rem); }
+html[lang="en"] .mode-nav a { min-width: 0; }
+html[lang="en"] .editor-actions { flex-wrap: wrap; }

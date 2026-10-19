@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
-<title id="title">Next Test Mode — Same API calls. Your test data.</title>
+<title id="title">Next Test Mode — One console. Server data, too.</title>
 <desc id="desc">Keep existing browser fetch calls after bootstrap setup. Try one-off response values from the console, or keep reusable scenarios in your own folder.</desc>
 <defs>
   <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M 28 0 L 0 0 0 28" fill="none" stroke="#dde5e6" stroke-width=".6"/></pattern>
@@ -11,10 +11,10 @@
 <rect x="42" y="35" width="36" height="36" rx="10" fill="#123c36"/>
 <text x="60" y="62" text-anchor="middle" fill="#8df6cf" font-family="Georgia,serif" font-size="32">t</text>
 <text x="90" y="62" fill="#173c36" font-family="Arial,Helvetica,sans-serif" font-size="27" font-weight="800">next test mode</text>
-<text x="43" y="129" fill="#648178" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="700" letter-spacing="2">KEEP CALL SITES. CHANGE RESPONSES.</text>
-<text x="40" y="190" fill="#142e2a" font-family="Arial,Helvetica,sans-serif" font-size="55" font-weight="800" letter-spacing="-2">Same API calls.</text>
-<text x="40" y="250" fill="#142e2a" font-family="Arial,Helvetica,sans-serif" font-size="55" font-weight="800" letter-spacing="-2">Your test data.</text>
-<text x="43" y="302" fill="#62766f" font-family="Arial,Helvetica,sans-serif" font-size="17">One-off in Console. Reusable in your own folder.</text>
+<text x="43" y="129" fill="#648178" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="700" letter-spacing="2">CONSOLE-FIRST NEXT.JS TESTING</text>
+<text x="40" y="190" fill="#142e2a" font-family="Arial,Helvetica,sans-serif" font-size="55" font-weight="800" letter-spacing="-2">One console.</text>
+<text x="40" y="250" fill="#142e2a" font-family="Arial,Helvetica,sans-serif" font-size="55" font-weight="800" letter-spacing="-2">Server data, too.</text>
+<text x="43" y="302" fill="#62766f" font-family="Arial,Helvetica,sans-serif" font-size="17">Mock data. Check the page. Keep your fetch calls.</text>
 <rect x="651" y="64" width="505" height="244" rx="14" fill="#102c28"/>
 <circle cx="677" cy="88" r="4" fill="#40645c"/><circle cx="692" cy="88" r="4" fill="#40645c"/><circle cx="707" cy="88" r="4" fill="#40645c"/>
 <text x="1132" y="93" text-anchor="end" fill="#9dbeb3" font-family="Arial,Helvetica,sans-serif" font-size="11" letter-spacing="1">NEXT.JS + DRAFT MODE</text>

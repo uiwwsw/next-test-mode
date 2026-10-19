@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { english } from "./messages.js";
 
 const command = "test.patch('/api/cart.json', { total: 9.99 })";
 const snapshot = (runtime) =>
@@ -21,9 +22,13 @@ const modes = {
 };
 export default function Playground({
   mode,
+  locale = "ko",
+  pagePath = "",
   initial = null,
   renderedAt = null,
 }) {
+  const t = (value) => locale === "en" ? english[value] ?? value : value;
+  const prefix = locale === "en" ? "/en" : "";
   const [result, setResult] = useState(initial);
   const [input, setInput] = useState('{\n  "total": 9.99\n}');
   const [operation, setOperation] = useState("patch");
@@ -120,7 +125,7 @@ export default function Playground({
       await navigator.clipboard.writeText(command);
       setCopied(true);
     } catch {
-      setError("명령을 선택해 복사해 주세요.");
+      setError(t("명령을 선택해 복사해 주세요."));
     }
   };
   const total =
@@ -130,43 +135,58 @@ export default function Playground({
   return (
     <>
       <section className="intro">
+        <nav aria-label="Language" className="language-nav">
+          <a href={pagePath || "/"} hrefLang="ko" aria-current={locale === "ko" ? "page" : undefined}>한국어</a>
+          <a href={`/en${pagePath}`} hrefLang="en" aria-current={locale === "en" ? "page" : undefined}>English</a>
+        </nav>
         <div className="eyebrow">
           <span className="live-dot" /> NEXT.JS · CONSOLE-FIRST TESTING
         </div>
         <h1>
-          호출 코드는 그대로.
-          <br />
-          <span>화면의 가능성은 자유롭게.</span>
+           {t("콘솔 한 줄로.")} <br />
+          <span> {t("서버 데이터까지 테스트.")} </span>
         </h1>
         <p className="intro-copy">
-          테스트 데이터는 따로 두고, 원하는 값은 콘솔에서.
-          <br />
-          CSR부터 SSR·ISR·SSG까지 같은 명령으로 확인하세요.
-        </p>
+           {t("개발 중 필요한 데이터와 화면 상태를 콘솔에서 바로 재현하세요.")} <br />
+           {t("브라우저 응답부터 서버·정적 페이지까지, 호출 코드는 그대로입니다.")} </p>
         <div className="install">
           <code>npm i @uiwwsw/next-test-mode</code>
           <span>→</span>
           <code>npx @uiwwsw/next-test-mode init</code>
         </div>
       </section>
-      <section className="playground" aria-label="실제 Next.js 데모">
+      <section className="playground" aria-label={t("실제 Next.js 데모")}>
         <div className="playground-heading">
           <div>
             <span className="eyebrow">TRY IT IN YOUR BROWSER</span>
-            <h2>네 가지 렌더링, 같은 사용법.</h2>
+            <h2> {t("값을 바꾸고, 화면에서 확인하세요.")} </h2>
           </div>
           <span
             className={`status-pill ${active ? "active" : ""}`}
             role="status"
           >
-            {!ready ? "연결 중…" : active ? "테스트 세션 활성" : "원래 데이터"}
+            {!ready ? t("연결 중…") : active ? t("테스트 세션 활성") : t("원래 데이터")}
           </span>
         </div>
-        <nav className="mode-nav" aria-label="렌더링 방식">
+        <div className="console-strip">
+          <div>
+            <span>DEVTOOLS → CONSOLE</span>
+            <code>{command}</code>
+          </div>
+          <button onClick={copy} aria-label={t("콘솔 명령 복사")}>
+            {copied ? t("복사 완료 ✓") : t("명령 복사 ↗")}
+          </button>
+        </div>
+        <details className="limits">
+          <summary> {t("서버에서 만든 화면도 콘솔로 테스트할 수 있을까요?")} </summary>
+          <p> {t("브라우저 콘솔만으로는 이미 서버에서 생성한 HTML이나 빌드된 정적 데이터를 바꾸기 어렵습니다. Next Test Mode는 개발·QA 세션에서 테스트 값을 서버에 전달하고, Draft Mode로 캐시를 우회해 화면을 다시 렌더합니다. 평소 데브 모드에서 화면 상태를 재현하듯, 같은 콘솔 명령으로 확인하세요.")} </p>
+          <p> {t("아래 렌더 방식은 기능 목록이 아니라 같은 테스트 값이 어디까지 적용되는지 확인하는 예제입니다. 먼저 명령을 실행하고 다른 방식으로 이동해 보세요.")} </p>
+        </details>
+        <nav className="mode-nav" aria-label={t("렌더링 방식")}>
           {Object.keys(modes).map((value) => (
             <a
               key={value}
-              href={`/${value.toLowerCase()}`}
+              href={`${prefix}/${value.toLowerCase()}`}
               aria-current={mode === value ? "page" : undefined}
             >
               {value}
@@ -183,27 +203,17 @@ export default function Playground({
           ))}
         </nav>
         <div className="mode-description">
-          <strong>{modes[mode][0]}</strong>
-          <p>{modes[mode][1]}</p>
+          <strong>{t(modes[mode][0])}</strong>
+          <p>{t(modes[mode][1])}</p>
         </div>
-        <div className="console-strip">
+        <div className="cache-tools" aria-label={t("서버 캐시 제어")}>
           <div>
-            <span>DEVTOOLS → CONSOLE</span>
-            <code>{command}</code>
-          </div>
-          <button onClick={copy} aria-label="콘솔 명령 복사">
-            {copied ? "복사 완료 ✓" : "명령 복사 ↗"}
-          </button>
-        </div>
-        <div className="cache-tools" aria-label="서버 캐시 제어">
-          <div>
-            <strong>콘솔에서 서버 캐시까지</strong>
+            <strong> {t("서버 미리보기는 자동으로 연결됩니다")} </strong>
             <p data-cache-status>
               {cacheState?.draftEnabled
-                ? "내 세션은 캐시를 우회하는 중"
-                : "기본 캐시 경로"}{" "}
-              · 공용 캐시는 유지됩니다.
-            </p>
+                ? t("내 세션은 캐시를 우회하는 중")
+                : t("기본 캐시 경로")}{" "}
+               {t("· 공용 캐시는 유지됩니다.")} </p>
             <code>
               test.cache.bypass() · test.cache.refresh() · test.cache.restore()
             </code>
@@ -215,23 +225,21 @@ export default function Playground({
                 void controlCache("bypass");
               }}
             >
-              서버 캐시 우회
-            </button>
+               {t("서버 캐시 우회")} </button>
             <button
               disabled={!ready}
               onClick={() => {
                 void controlCache("refresh");
               }}
             >
-              다시 렌더
-            </button>
+               {t("다시 렌더")} </button>
           </div>
         </div>
         <div className="workspace">
           <section className="editor-pane">
             <div className="pane-heading">
               <span className="step">01</span>
-              <h3>원하는 데이터를 넣으세요</h3>
+              <h3> {t("원하는 데이터를 넣으세요")} </h3>
             </div>
             <form onSubmit={apply}>
               <fieldset disabled={!ready}>
@@ -241,14 +249,14 @@ export default function Playground({
                     aria-pressed={operation === "patch"}
                     onClick={() => setOperation("patch")}
                   >
-                    Patch <small>일부 변경</small>
+                    Patch <small> {t("일부 변경")} </small>
                   </button>
                   <button
                     type="button"
                     aria-pressed={operation === "mock"}
                     onClick={() => setOperation("mock")}
                   >
-                    Mock <small>전체 교체</small>
+                    Mock <small> {t("전체 교체")} </small>
                   </button>
                 </div>
                 <div className="editor-label">
@@ -272,7 +280,7 @@ export default function Playground({
                 />
                 {operation === "mock" && (
                   <label className="http-input">
-                    HTTP 상태{" "}
+                     {t("HTTP 상태")} {" "}
                     <input
                       type="number"
                       min="200"
@@ -284,11 +292,10 @@ export default function Playground({
                 )}
                 <div className="editor-actions">
                   <button type="submit" className="primary">
-                    적용하고 화면 확인 <span>↗</span>
+                     {t("적용하고 화면 확인")} <span>↗</span>
                   </button>
                   <button type="button" onClick={reset}>
-                    원래 응답
-                  </button>
+                     {t("원래 응답")} </button>
                 </div>
               </fieldset>
             </form>
@@ -298,18 +305,16 @@ export default function Playground({
               </p>
             )}
             <p className="pane-note">
-              콘솔과 입력창은 같은 패키지 API를 실행합니다.
-              <br />
-              값을 바꾸면 Draft Mode 연결 후 화면이 자동 갱신됩니다.
-            </p>
+               {t("콘솔과 입력창은 같은 패키지 API를 실행합니다.")} <br />
+               {t("값을 바꾸면 Draft Mode 연결 후 화면이 자동 갱신됩니다.")} </p>
           </section>
           <section className="result-pane">
             <div className="pane-heading">
               <span className="step">02</span>
               <h3>
                 {mode === "CSR"
-                  ? "브라우저가 받은 결과"
-                  : "서버가 HTML에 넣은 결과"}
+                  ? t("브라우저가 받은 결과")
+                  : t("서버가 HTML에 넣은 결과")}
               </h3>
             </div>
             <div className="result-meta">
@@ -323,56 +328,43 @@ export default function Playground({
             <pre className="result-json" data-demo-payload>
               {result
                 ? JSON.stringify(result.data, null, 2)
-                : "데이터를 불러오는 중…"}
+                : t("데이터를 불러오는 중…")}
             </pre>
             {renderedAt && (
               <div className="render-stamp">
-                서버에서 생성한 시각 <time data-rendered-at>{renderedAt}</time>
+                 {t("서버에서 생성한 시각")} <time data-rendered-at>{renderedAt}</time>
               </div>
             )}
           </section>
         </div>
         <p className="session-note">
-          <strong>내 테스트 세션에만 적용됩니다.</strong> 새로고침 후에도
-          유지되며, 같은 브라우저의 탭이 공유합니다. <code>test.clear()</code>로
-          종료하세요.
-        </p>
+          <strong> {t("내 테스트 세션에만 적용됩니다.")} </strong>  {t("새로고침 후에도 유지되며, 같은 브라우저의 탭이 공유합니다.")} <code>test.clear()</code> {t("로 종료하세요.")} </p>
       </section>
-      <section className="benefits" aria-label="장점">
+      <section className="benefits" aria-label={t("장점")}>
         <article>
           <span>01 / SAME CALLS</span>
-          <h3>호출부를 고치지 마세요.</h3>
-          <p>앱 시작 지점에 한 번 연결하면 기존 fetch를 계속 사용합니다.</p>
+          <h3> {t("호출부를 고치지 마세요.")} </h3>
+          <p> {t("앱 시작 지점에 한 번 연결하면 기존 fetch를 계속 사용합니다.")} </p>
         </article>
         <article>
           <span>02 / YOUR SCENARIOS</span>
-          <h3>테스트는 테스트로 남기세요.</h3>
+          <h3> {t("테스트는 테스트로 남기세요.")} </h3>
           <p>
-            한 번 쓸 값은 콘솔에서. 반복할 시나리오는 별도 폴더에서 수정하고
-            공유하세요.
-          </p>
+             {t("한 번 쓸 값은 콘솔에서. 반복할 시나리오는 별도 폴더에서 수정하고 공유하세요.")} </p>
         </article>
         <article>
           <span>03 / EVERY RENDER</span>
-          <h3>캐시된 페이지도 확인하세요.</h3>
+          <h3> {t("캐시된 페이지도 확인하세요.")} </h3>
           <p>
-            Draft Mode가 테스트 세션의 캐시를 우회합니다. 일반 방문자는 원래
-            페이지를 봅니다.
-          </p>
+             {t("콘솔의 테스트 값을 서버 렌더에도 전달합니다. 일반 방문자는 원래 페이지를 봅니다.")} </p>
         </article>
       </section>
       <details className="limits">
-        <summary>지원 범위와 입력값 안내</summary>
+        <summary> {t("지원 범위와 입력값 안내")} </summary>
         <p>
-          Next.js 16 App Router의 Node 환경에서 실행하는 fetch 기반
-          CSR·SSR·ISR·SSG 미리보기를 지원합니다. 정적 HTML export·Pages
-          Router·Edge·DB 직접 조회는 자동 연결 범위에 포함하지 않습니다.
-        </p>
+           {t("Next.js 16 App Router의 Node 환경에서 실행하는 fetch 기반 CSR·SSR·ISR·SSG 미리보기를 지원합니다. 정적 HTML export·Pages Router·Edge·DB 직접 조회는 자동 연결 범위에 포함하지 않습니다.")} </p>
         <p>
-          입력값은 인코딩 후 최대 3,500바이트입니다. 큰 응답은 필요한 필드만
-          Patch하거나 파일에 시나리오로 등록하세요. 이 데모는 /api/cart.json
-          샘플 경로만 변경합니다.
-        </p>
+           {t("입력값은 인코딩 후 최대 3,500바이트입니다. 큰 응답은 필요한 필드만 Patch하거나 파일에 시나리오로 등록하세요. 이 데모는 /api/cart.json 샘플 경로만 변경합니다.")} </p>
       </details>
     </>
   );

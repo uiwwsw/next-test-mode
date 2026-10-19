@@ -1,11 +1,12 @@
+import { pageMetadata } from "../../demo-components/seo.js";
+export const metadata = pageMetadata("ko", "");
 import Playground from "../../demo-components/Playground.jsx";
 import { loadCart } from "../../demo-components/load-cart.js";
-export const revalidate = 60;
 export default async function Page() {
-  const result = await loadCart({ next: { revalidate: 60 } });
+  const result = await loadCart({ cache: "force-cache" });
   return (
-    <Playground
-      mode="ISR"
+    <Playground pagePath="" locale="ko"
+      mode="SSG"
       initial={result}
       renderedAt={new Date().toISOString()}
     />

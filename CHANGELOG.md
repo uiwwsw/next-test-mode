@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0 — 2026-10-19
+
+- First stable release of the console-first Next.js development and QA workflow.
+- Reframe the README and demo around testing fetch data and page states from the console, with server and static rendering examples demonstrating the same workflow.
+- Add English and Korean landing pages and READMEs, localized search/social metadata, canonical and language alternate links, robots.txt and sitemap.xml.
+- Upgrade the demo, fixture and minimum Next peer to 16.4.2, including upstream Draft Mode cache isolation fixes.
+- Explain session-scoped Draft Mode previews and supported data boundaries. Existing 0.7 APIs remain compatible.
+
 ## 0.7.0 — Separate tests, inspect the server preview
 
 - Generate an app-owned test folder with one shared catalog, browser/server adapters and thin environment-gated hooks; migrate unchanged 0.5/0.6 setup without overwriting custom code.

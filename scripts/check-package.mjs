@@ -51,6 +51,7 @@ try {
     "src/fetch.ts",
     "templates/test-mode/install.ts",
     "README.md",
+    "README.ko.md",
     "LICENSE",
   ]) {
     assert.ok(files.has(required), `Missing published file: ${required}`);
