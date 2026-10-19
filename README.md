@@ -1,7 +1,7 @@
 **English** · [한국어](./README.ko.md)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.1/docs/assets/hero.png" width="100%" alt="Next Test Mode — One console. Server data, too." />
+  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.2/docs/assets/hero.png" width="100%" alt="Next Test Mode — One console. Server data, too." />
 </p>
 <p align="center"><strong>Test Next.js API data and page states from the console.</strong><br />Keep your fetch calls. Try the data you need. Check the real page.</p>
 <p align="center">
@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Next.js-App_Router-173c36?style=flat-square" alt="Next.js App Router" />
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-62796f?style=flat-square" alt="MIT license" /></a>
 </p>
-<p align="center"><a href="https://test-mode-tau.vercel.app/en">Live demo ↗</a> · <a href="#quick-start">Quick start</a> · <a href="#rendering-support">Compatibility</a> · <a href="./docs/guide.md">API guide</a></p>
+<p align="center"><a href="https://next-test-mode.vercel.app/en">Live demo ↗</a> · <a href="#quick-start">Quick start</a> · <a href="#rendering-support">Compatibility</a> · <a href="./docs/guide.md">API guide</a></p>
 
 **Reproduce the data and page states you need during development with one console command.** Next Test Mode is a development and QA tool for mocking and patching Next.js fetch responses: empty lists, different prices, server errors, and reusable scenarios, without editing individual API calls.
 
@@ -74,9 +74,9 @@ Development is enabled by default. To use an intentional QA deployment, set **`N
 
 ## See it in action
 
-Open the [English demo](https://test-mode-tau.vercel.app/en) or [한국어 데모](https://test-mode-tau.vercel.app/). Change a cart value in the console, check the updated page, then clear the test.
+Open the [English demo](https://next-test-mode.vercel.app/en) or [한국어 데모](https://next-test-mode.vercel.app/). Change a cart value in the console, check the updated page, then clear the test.
 
-<p align="center"><img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.1/docs/assets/scenarios.gif" width="960" alt="Console patch changes a static cart preview and server HTML; mock an HTTP error, then restore the original response." /></p>
+<p align="center"><img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.2/docs/assets/scenarios.gif" width="960" alt="Console patch changes a static cart preview and server HTML; mock an HTTP error, then restore the original response." /></p>
 
 Use DevTools Console or the demo's JSON editor:
 

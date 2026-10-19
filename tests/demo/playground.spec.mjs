@@ -101,18 +101,18 @@ for (const locale of ['ko', 'en']) {
       const html = await response.text();
       expect(html).toContain(`<html lang="${locale}">`);
       expect(html).toContain(locale === 'en' ? 'Test server data, too.' : '서버 데이터까지 테스트.');
-      expect(html).toContain(`rel="canonical" href="https://test-mode-tau.vercel.app${prefix}"`);
-      expect(html).toContain(`hrefLang="ko" href="https://test-mode-tau.vercel.app"`);
-      expect(html).toContain(`hrefLang="en" href="https://test-mode-tau.vercel.app/en"`);
+      expect(html).toContain(`rel="canonical" href="https://next-test-mode.vercel.app${prefix}"`);
+      expect(html).toContain(`hrefLang="ko" href="https://next-test-mode.vercel.app"`);
+      expect(html).toContain(`hrefLang="en" href="https://next-test-mode.vercel.app/en"`);
       expect(html).toContain('name="twitter:card" content="summary_large_image"');
       expect(html).toContain('application/ld+json');
     }
     const sitemap = await request.get('/sitemap.xml');
     expect(sitemap.ok()).toBe(true);
-    expect(await sitemap.text()).toContain('https://test-mode-tau.vercel.app/en');
+    expect(await sitemap.text()).toContain('https://next-test-mode.vercel.app/en');
     expect(await sitemap.text()).not.toContain('/en/ssr');
     const robots = await request.get('/robots.txt');
-    expect(await robots.text()).toContain('Sitemap: https://test-mode-tau.vercel.app/sitemap.xml');
+    expect(await robots.text()).toContain('Sitemap: https://next-test-mode.vercel.app/sitemap.xml');
   });
 }
 

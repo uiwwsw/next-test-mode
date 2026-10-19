@@ -1,7 +1,7 @@
 [English](./README.md) · **한국어**
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.1/docs/assets/hero.png" width="100%" alt="Next Test Mode — 콘솔 한 줄로 서버 데이터까지 테스트." />
+  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.2/docs/assets/hero.png" width="100%" alt="Next Test Mode — 콘솔 한 줄로 서버 데이터까지 테스트." />
 </p>
 <p align="center">
   <strong>콘솔 한 줄로. 서버 데이터까지 테스트.</strong><br />
@@ -14,7 +14,7 @@
   <a href="https://github.com/uiwwsw/next-test-mode/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-62796f?style=flat-square" alt="MIT license" /></a>
 </p>
 <p align="center">
-  <a href="https://test-mode-tau.vercel.app/">Live demo ↗</a> ·
+  <a href="https://next-test-mode.vercel.app/">Live demo ↗</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#rendering-support">지원 범위</a> ·
   <a href="https://github.com/uiwwsw/next-test-mode/blob/main/docs/guide.md">API 가이드</a> ·
@@ -83,10 +83,10 @@ src/                         # src 없는 앱은 프로젝트 루트
 
 ## See it in action
 
-**[콘솔 데모 열기](https://test-mode-tau.vercel.app/)** — 값을 바꾸고 화면을 확인한 뒤 `test.clear()`로 돌아오세요.
+**[콘솔 데모 열기](https://next-test-mode.vercel.app/)** — 값을 바꾸고 화면을 확인한 뒤 `test.clear()`로 돌아오세요.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.1/docs/assets/scenarios.gif" width="960" alt="실제 Next.js 데모: SSG 원래 가격, 콘솔 patch, SSR에서도 같은 값, HTTP 503, 원래 캐시 응답 복귀." />
+  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.2/docs/assets/scenarios.gif" width="960" alt="실제 Next.js 데모: SSG 원래 가격, 콘솔 patch, SSR에서도 같은 값, HTTP 503, 원래 캐시 응답 복귀." />
 </p>
 
 데모의 DevTools Console에 입력하거나, 화면의 JSON 편집기에서 원하는 값을 적용하세요.

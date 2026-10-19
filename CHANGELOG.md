@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2 — 2026-10-19
+
+- Move the public demo, localized SEO metadata, sample API, package homepage, documentation and deployment health checks to https://next-test-mode.vercel.app.
+- Permanently redirect the previous public hostname to the new domain while preserving paths and query strings.
+
 ## 1.0.1 — 2026-10-19
 
 - Focus the homepage on changing data in the console and checking the page. Remove rendering-mode navigation and technical cache controls from the demo UI.

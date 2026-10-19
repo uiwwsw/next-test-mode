@@ -1,6 +1,6 @@
 # Console → automatic SSR HTML
 
-**[공개 SSR 데모](https://test-mode-tau.vercel.app/api/ssr)**
+**[공개 SSR 데모](https://next-test-mode.vercel.app/api/ssr)**
 
 ```bash
 npm ci

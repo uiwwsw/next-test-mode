@@ -2,7 +2,7 @@
 
 이 폴더는 Next가 없는 브라우저 앱의 fetch·Console·overlay 예시와 회귀 테스트용입니다. 현재 공개 사이트는 루트 `app/`에 있는 실제 Next.js 데모입니다.
 
-**[CSR](https://test-mode-tau.vercel.app/csr) · [SSR](https://test-mode-tau.vercel.app/ssr) · [ISR](https://test-mode-tau.vercel.app/isr) · [SSG](https://test-mode-tau.vercel.app/ssg)**
+**[CSR](https://next-test-mode.vercel.app/csr) · [SSR](https://next-test-mode.vercel.app/ssr) · [ISR](https://next-test-mode.vercel.app/isr) · [SSG](https://next-test-mode.vercel.app/ssg)**
 
 ```js
 test.patch('/api/cart.json', { total: 9.99 });

@@ -3,14 +3,20 @@
   "runtime": "nextjs+vercel",
   "execution": "automatic",
   "requireCleanGit": true,
-  "verify": ["npm ci", "npm run ci", "npm run build:demo"],
-  "deploy": ["env VERCEL_ORG_ID=team_rDak9bbSNX7P2zOvDhhnARwh VERCEL_PROJECT_ID=prj_OtJaW3mZSEIG1xFUjA1uZAndkZLK vercel deploy --prod --yes --scope uiwwsws-projects"],
+  "verify": [
+    "npm ci",
+    "npm run ci",
+    "npm run build:demo"
+  ],
+  "deploy": [
+    "env VERCEL_ORG_ID=team_rDak9bbSNX7P2zOvDhhnARwh VERCEL_PROJECT_ID=prj_OtJaW3mZSEIG1xFUjA1uZAndkZLK node scripts/deploy.mjs"
+  ],
   "healthchecks": [
-    "https://test-mode-tau.vercel.app/",
-    "https://test-mode-tau.vercel.app/en",
-    "https://test-mode-tau.vercel.app/robots.txt",
-    "https://test-mode-tau.vercel.app/sitemap.xml",
-    "https://test-mode-tau.vercel.app/social-card.png",
-    "https://test-mode-tau.vercel.app/api/cart.json"
+    "https://next-test-mode.vercel.app/",
+    "https://next-test-mode.vercel.app/en",
+    "https://next-test-mode.vercel.app/robots.txt",
+    "https://next-test-mode.vercel.app/sitemap.xml",
+    "https://next-test-mode.vercel.app/social-card.png",
+    "https://next-test-mode.vercel.app/api/cart.json"
   ]
 }

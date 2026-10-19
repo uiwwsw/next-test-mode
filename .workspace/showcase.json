@@ -18,7 +18,7 @@
   "links": [
     {
       "platform": "web",
-      "url": "https://test-mode-tau.vercel.app/"
+      "url": "https://next-test-mode.vercel.app/"
     },
     {
       "platform": "source",
@@ -31,6 +31,6 @@
   ],
   "evidence": {
     "verifiedAt": "2026-10-19",
-    "note": "기존 공개 데모 HTTP 200 및 MOVV 공개 services.json 등재 확인. 1.0 변경은 Next.js 16.4.2에서 콘솔→서버 HTML, 세션 격리, 캐시 복귀 및 비활성 production 검증 완료. 공개 배포 후 healthcheck로 재확인."
+    "note": "새 공개 주소 https://next-test-mode.vercel.app/ 및 /en, /api/cart.json HTTP 200 확인. 기존 공개 서비스의 도메인 변경이며 공개 여부와 출시 상태를 유지함. 1.0.2에서 문서·SEO·샘플 API·배포 점검 주소 갱신."
   }
 }

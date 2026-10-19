@@ -1,4 +1,4 @@
-export const siteUrl = 'https://test-mode-tau.vercel.app';
+export const siteUrl = 'https://next-test-mode.vercel.app';
 export const routes = [''];
 export function pageMetadata(locale = 'ko', path = '') {
   const en = locale === 'en';

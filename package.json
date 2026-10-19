@@ -1,6 +1,6 @@
 {
   "name": "@uiwwsw/next-test-mode",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Test fetch data and page states from the console, including session-scoped previews of server-rendered and static Next.js pages.",
   "type": "module",
   "packageManager": "npm@11.16.0",
@@ -109,7 +109,7 @@
   "bugs": {
     "url": "https://github.com/uiwwsw/next-test-mode/issues"
   },
-  "homepage": "https://test-mode-tau.vercel.app/",
+  "homepage": "https://next-test-mode.vercel.app/",
   "publishConfig": {
     "access": "public"
   },

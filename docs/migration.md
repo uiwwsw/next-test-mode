@@ -1,6 +1,6 @@
 # @uiwwsw/test-mode → @uiwwsw/next-test-mode
 
-0.6.0부터 제품 이름은 **Next Test Mode**, npm 패키지는 **`@uiwwsw/next-test-mode`**, 저장소는 **uiwwsw/next-test-mode**입니다. 기존 0.5.0 패키지는 계속 설치할 수 있지만 새 개발은 새 이름으로 진행합니다. 공개 데모 주소는 https://test-mode-tau.vercel.app/ 그대로입니다.
+0.6.0부터 제품 이름은 **Next Test Mode**, npm 패키지는 **`@uiwwsw/next-test-mode`**, 저장소는 **uiwwsw/next-test-mode**입니다. 기존 0.5.0 패키지는 계속 설치할 수 있지만 새 개발은 새 이름으로 진행합니다. 공개 데모 주소는 https://next-test-mode.vercel.app/ 입니다.
 
 ## Next App Router
 
