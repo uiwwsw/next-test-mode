@@ -2,11 +2,21 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 
 const scope = 'uiwwsws-projects';
-// Vercel writes progress to stderr and the completed deployment URL to stdout.
+// Progress goes to stderr; non-interactive CLI releases may return JSON on stdout.
 const output = execFileSync('vercel', ['deploy', '--prod', '--yes', '--scope', scope], {
   encoding: 'utf8', stdio: ['inherit', 'pipe', 'inherit'],
 });
-const url = output.trim();
+const result = output.trim();
+let url;
+if (result.startsWith('{')) {
+  const response = JSON.parse(result);
+  assert.equal(response.status, 'ok');
+  assert.equal(response.deployment?.readyState, 'READY');
+  assert.equal(response.deployment?.target, 'production');
+  url = response.deployment.url;
+} else {
+  url = result;
+}
 assert.match(url, /^https:\/\/[a-z0-9-]+\.vercel\.app\/?$/, 'Unexpected Vercel deployment URL');
 console.log(`Verified production deployment: ${url}`);
 // Explicit aliases also follow future CLI releases when configured outside project domains.
