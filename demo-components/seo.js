@@ -1,8 +1,10 @@
 export const siteUrl = 'https://test-mode-tau.vercel.app';
-export const routes = ['', '/csr', '/ssr', '/isr', '/ssg'];
+export const routes = [''];
 export function pageMetadata(locale = 'ko', path = '') {
   const en = locale === 'en';
-  const label = path ? `${path.slice(1).toUpperCase()} · ` : '';
+  const label = '';
+  // Compatibility rendering routes share the same demo UI; consolidate search signals.
+  path = '';
   const title = en
     ? `${label}Next Test Mode — Test Next.js API data from the console`
     : `${label}Next Test Mode — Next.js API 데이터를 콘솔에서 테스트`;

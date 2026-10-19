@@ -78,30 +78,18 @@ test("mobile editor, keyboard apply and invalid JSON keep the demo usable", asyn
   ).toBe(true);
 });
 
-test("demo can bypass server caches without mock data and restore the static result", async ({
-  page,
-}) => {
+test("Console cache APIs remain usable without rendering controls in the demo", async ({ page }) => {
   await page.goto("/ssg");
-  await expect(
-    page.getByRole("button", { name: "서버 캐시 우회", exact: true }),
-  ).toBeEnabled();
+  await expect(page.locator("#json-input")).toBeEnabled();
   const original = await page.locator("[data-rendered-at]").textContent();
-  await page
-    .getByRole("button", { name: "서버 캐시 우회", exact: true })
-    .click();
+  await page.evaluate(() => { void window.test.cache.bypass(); });
   await expect(page.locator("[data-rendered-at]")).not.toHaveText(original);
-  await expect(page.locator("[data-cache-status]")).toContainText(
-    "우회하는 중",
-  );
   await expect(page.locator("[data-demo-total]")).toHaveText("42");
   const preview = await page.locator("[data-rendered-at]").textContent();
-  await page.getByRole("button", { name: "다시 렌더", exact: true }).click();
+  await page.evaluate(() => { void window.test.cache.refresh(); });
   await expect(page.locator("[data-rendered-at]")).not.toHaveText(preview);
   await page.getByRole("button", { name: "원래 응답", exact: true }).click();
   await expect(page.locator("[data-rendered-at]")).toHaveText(original);
-  await expect(page.locator("[data-cache-status]")).toContainText(
-    "기본 캐시 경로",
-  );
 });
 
 for (const locale of ['ko', 'en']) {
@@ -113,15 +101,16 @@ for (const locale of ['ko', 'en']) {
       const html = await response.text();
       expect(html).toContain(`<html lang="${locale}">`);
       expect(html).toContain(locale === 'en' ? 'Test server data, too.' : '서버 데이터까지 테스트.');
-      expect(html).toContain(`rel="canonical" href="https://test-mode-tau.vercel.app${prefix}${path}"`);
-      expect(html).toContain(`hrefLang="ko" href="https://test-mode-tau.vercel.app${path}"`);
-      expect(html).toContain(`hrefLang="en" href="https://test-mode-tau.vercel.app/en${path}"`);
+      expect(html).toContain(`rel="canonical" href="https://test-mode-tau.vercel.app${prefix}"`);
+      expect(html).toContain(`hrefLang="ko" href="https://test-mode-tau.vercel.app"`);
+      expect(html).toContain(`hrefLang="en" href="https://test-mode-tau.vercel.app/en"`);
       expect(html).toContain('name="twitter:card" content="summary_large_image"');
       expect(html).toContain('application/ld+json');
     }
     const sitemap = await request.get('/sitemap.xml');
     expect(sitemap.ok()).toBe(true);
-    expect(await sitemap.text()).toContain('https://test-mode-tau.vercel.app/en/ssr');
+    expect(await sitemap.text()).toContain('https://test-mode-tau.vercel.app/en');
+    expect(await sitemap.text()).not.toContain('/en/ssr');
     const robots = await request.get('/robots.txt');
     expect(await robots.text()).toContain('Sitemap: https://test-mode-tau.vercel.app/sitemap.xml');
   });
@@ -133,13 +122,23 @@ test('English console values reach static and server HTML and language navigatio
   await expect(page.locator('#json-input')).toBeEnabled();
   await page.evaluate(() => window.test.patch('/api/cart.json', { total: 7.25 }));
   await expect(page.locator('[data-demo-total]')).toHaveText('7.25');
-  await page.getByRole('link', { name: 'SSR Server' }).click();
+  await page.goto('/en/ssr');
   await expect(page).toHaveURL(/\/en\/ssr$/);
   await expect(page.locator('[data-demo-total]')).toHaveText('7.25');
-  await expect(page.getByRole('heading', { name: 'Result rendered into server HTML' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Check the updated result' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('link', { name: '한국어', exact: true }).click();
   await expect(page).toHaveURL(/\/ssr$/);
   await expect(page.locator('html')).toHaveAttribute('lang', 'ko');
   await expect(page.locator('[data-demo-total]')).toHaveText('7.25');
 });
+
+for (const path of ['/', '/en']) {
+  test(`${path} focuses on Console input without rendering or cache controls`, async ({ page }) => {
+    await page.goto(path);
+    await expect(page.locator('.console-strip')).toBeVisible();
+    await expect(page.locator('#json-input')).toBeEnabled();
+    await expect(page.locator('.mode-nav, .mode-description, .cache-tools, .render-stamp')).toHaveCount(0);
+    await expect(page.locator('.limits')).toHaveCount(0);
+  });
+}

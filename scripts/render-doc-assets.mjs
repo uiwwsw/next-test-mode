@@ -83,17 +83,13 @@ try {
   await page.evaluate(() => {
     void window.test.cache.bypass();
   });
-  await expect(page.locator("[data-cache-status]")).toContainText(
-    "bypassing caches",
-  );
+  await expect.poll(() => page.evaluate(() => window.demoTestMode.cache.status().draftEnabled)).toBe(true);
   await ready();
   await capture("fresh");
   await page.evaluate(() => {
     void window.test.cache.restore();
   });
-  await expect(page.locator("[data-cache-status]")).toContainText(
-    "Default cache path",
-  );
+  await expect.poll(() => page.evaluate(() => window.demoTestMode.cache.status().draftEnabled)).toBe(false);
   await ready();
   await capture("reset");
   execFileSync(

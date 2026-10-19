@@ -1,7 +1,7 @@
 **English** · [한국어](./README.ko.md)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.0/docs/assets/hero.png" width="100%" alt="Next Test Mode — One console. Server data, too." />
+  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.1/docs/assets/hero.png" width="100%" alt="Next Test Mode — One console. Server data, too." />
 </p>
 <p align="center"><strong>Test Next.js API data and page states from the console.</strong><br />Keep your fetch calls. Try the data you need. Check the real page.</p>
 <p align="center">
@@ -74,11 +74,9 @@ Development is enabled by default. To use an intentional QA deployment, set **`N
 
 ## See it in action
 
-Open the [English demo](https://test-mode-tau.vercel.app/en) or [한국어 데모](https://test-mode-tau.vercel.app/). Change a cart value first, then visit the server and static examples to see the same value in their rendered HTML.
+Open the [English demo](https://test-mode-tau.vercel.app/en) or [한국어 데모](https://test-mode-tau.vercel.app/). Change a cart value in the console, check the updated page, then clear the test.
 
-[CSR](https://test-mode-tau.vercel.app/en/csr) · [SSR](https://test-mode-tau.vercel.app/en/ssr) · [ISR](https://test-mode-tau.vercel.app/en/isr) · [SSG](https://test-mode-tau.vercel.app/en/ssg)
-
-<p align="center"><img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.0/docs/assets/scenarios.gif" width="960" alt="Console patch changes a static cart preview and server HTML; mock an HTTP error, then restore the original response." /></p>
+<p align="center"><img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.1/docs/assets/scenarios.gif" width="960" alt="Console patch changes a static cart preview and server HTML; mock an HTTP error, then restore the original response." /></p>
 
 Use DevTools Console or the demo's JSON editor:
 
@@ -183,4 +181,4 @@ npm run dev:demo       # Next.js demo
 npm run build:demo     # Vercel production build
 ```
 
-A GitHub Release from a verified main tag triggers CI and npm publishing with provenance. Stable releases use `latest`. Version 1.0.0 retains the 0.7 public APIs. [Release process](./docs/releasing.md) · [Architecture](./docs/architecture.md) · [Changelog](./CHANGELOG.md).
+A GitHub Release from a verified main tag triggers CI and npm publishing with provenance. Stable releases use `latest`. Version 1.0 retains the 0.7 public APIs. [Release process](./docs/releasing.md) · [Architecture](./docs/architecture.md) · [Changelog](./CHANGELOG.md).

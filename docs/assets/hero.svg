@@ -25,7 +25,7 @@
 <text x="676" y="219" fill="#8df6cf" font-family="Menlo,Consolas,monospace" font-size="19">&gt; test.patch('/api/cart',</text>
 <text x="676" y="248" fill="#a5c7bb" font-family="Menlo,Consolas,monospace" font-size="17">    { total: 9.99 })</text>
 <circle cx="680" cy="279" r="3" fill="#8df6cf"/>
-<text x="691" y="283" fill="#9ebcb1" font-family="Arial,Helvetica,sans-serif" font-size="12">CSR · SSR · ISR · SSG — one Console.</text>
+<text x="691" y="283" fill="#9ebcb1" font-family="Arial,Helvetica,sans-serif" font-size="12">Change data. Check the actual page.</text>
 </g>
 <rect x=".5" y=".5" width="1199" height="359" rx="20" fill="none" stroke="#dce6e0"/>
 </svg>

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1 — 2026-10-19
+
+- Focus the homepage on changing data in the console and checking the page. Remove rendering-mode navigation and technical cache controls from the demo UI.
+- Keep rendering support and the session-scoped preview mechanism in the English and Korean READMEs. Existing rendering routes and APIs remain compatible.
+
 ## 1.0.0 — 2026-10-19
 
 - First stable release of the console-first Next.js development and QA workflow.

@@ -1,7 +1,7 @@
 [English](./README.md) · **한국어**
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.0/docs/assets/hero.png" width="100%" alt="Next Test Mode — 콘솔 한 줄로 서버 데이터까지 테스트." />
+  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.1/docs/assets/hero.png" width="100%" alt="Next Test Mode — 콘솔 한 줄로 서버 데이터까지 테스트." />
 </p>
 <p align="center">
   <strong>콘솔 한 줄로. 서버 데이터까지 테스트.</strong><br />
@@ -83,10 +83,10 @@ src/                         # src 없는 앱은 프로젝트 루트
 
 ## See it in action
 
-**[CSR](https://test-mode-tau.vercel.app/csr) · [SSR](https://test-mode-tau.vercel.app/ssr) · [ISR](https://test-mode-tau.vercel.app/isr) · [SSG](https://test-mode-tau.vercel.app/ssg)** — 먼저 콘솔에서 장바구니 값을 바꾸고, 페이지를 이동해 서버·정적 화면에도 같은 값이 반영되는지 확인하세요.
+**[콘솔 데모 열기](https://test-mode-tau.vercel.app/)** — 값을 바꾸고 화면을 확인한 뒤 `test.clear()`로 돌아오세요.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.0/docs/assets/scenarios.gif" width="960" alt="실제 Next.js 데모: SSG 원래 가격, 콘솔 patch, SSR에서도 같은 값, HTTP 503, 원래 캐시 응답 복귀." />
+  <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.1/docs/assets/scenarios.gif" width="960" alt="실제 Next.js 데모: SSG 원래 가격, 콘솔 patch, SSR에서도 같은 값, HTTP 503, 원래 캐시 응답 복귀." />
 </p>
 
 데모의 DevTools Console에 입력하거나, 화면의 JSON 편집기에서 원하는 값을 적용하세요.
@@ -100,11 +100,11 @@ test.reset('/api/cart.json');   // 이 경로의 직접 입력만 제거
 test.clear();                  // 모든 입력과 시나리오 해제
 ```
 
-SSR·ISR·SSG 탭에서는 **서버가 보낸 HTML 자체에 변경된 값이 들어갑니다.** 다른 브라우저 세션의 원래 응답은 유지됩니다. JSON 상태는 같은 브라우저의 탭이 공유하며 새로고침 후에도 유지됩니다. 테스트가 끝나면 `test.clear()`를 사용하세요.
+서버 렌더 미리보기에서는 **서버가 보낸 HTML 자체에 변경된 값이 들어갑니다.** 다른 브라우저 세션의 원래 응답은 유지됩니다. JSON 상태는 같은 브라우저의 탭이 공유하며 새로고침 후에도 유지됩니다. 테스트가 끝나면 `test.clear()`를 사용하세요.
 
 ## Rendering support
 
-개발·QA에서 다양한 렌더 환경의 화면 상태를 재현합니다. CSR은 브라우저 fetch를 가로채고, 서버 페이지는 테스트 쿠키로 값을 전달받습니다. Next Draft Mode가 해당 세션의 정적·재검증 캐시를 우회하므로, 원래 SSG·ISR 페이지에서도 변경된 데이터로 새 HTML을 확인할 수 있습니다.
+브라우저 콘솔만으로는 이미 만들어진 서버 HTML이나 SSG 산출물을 직접 바꿀 수 없습니다. Next Test Mode는 테스트 값을 서버에 전달하고 Draft Mode로 해당 세션의 캐시를 우회해 새 HTML을 렌더합니다. 덕분에 개발자는 렌더 방식을 골라 테스트하지 않고 같은 콘솔 명령으로 지원하는 fetch 데이터와 화면 상태를 재현합니다. CSR은 브라우저 fetch를 가로채고, 서버 페이지는 테스트 쿠키로 값을 전달받습니다. 렌더별 동작과 제한은 아래 표에서 확인하세요.
 
 | 렌더 방식 | Console 변경 후 동작 |
 | :--- | :--- |
