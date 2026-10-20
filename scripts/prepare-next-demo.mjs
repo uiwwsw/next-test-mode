@@ -13,3 +13,5 @@ await cp("dist", "public/playground/dist", {
 
 // Share previews use a committed image, so deployments do not depend on GitHub.
 await cp("docs/assets/social-card.png", "public/social-card.png");
+
+await cp("docs/verification", "public", { recursive: true });

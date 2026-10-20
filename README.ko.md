@@ -207,3 +207,8 @@ npm run build:demo     # Vercel 배포용 Next 빌드
 ```
 
 검증된 main의 릴리스 태그를 GitHub Release로 발행하면, CI를 다시 통과한 패키지가 `NPM_TOKEN`을 사용하는 Actions에서 npm provenance와 함께 배포됩니다. [배포 절차](https://github.com/uiwwsw/next-test-mode/blob/main/docs/releasing.md) · [설계](https://github.com/uiwwsw/next-test-mode/blob/main/docs/architecture.md) · [Changelog](https://github.com/uiwwsw/next-test-mode/blob/main/CHANGELOG.md).
+
+
+## Search discovery / 검색 노출
+
+The Korean and English demo pages have localized titles and descriptions, reciprocal hreflang, canonical URLs, structured data, robots.txt and sitemap.xml. Search content describes actual fetch mocking, response patching and session-scoped Next.js rendering previews. API routes and test responses are not public search documents. See [SEO verification](docs/SEO.md).

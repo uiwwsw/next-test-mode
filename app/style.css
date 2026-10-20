@@ -670,3 +670,5 @@ textarea:disabled {
 html[lang="en"] .intro h1 { font-size: clamp(2.2rem, 5vw, 4.8rem); }
 html[lang="en"] .mode-nav a { min-width: 0; }
 html[lang="en"] .editor-actions { flex-wrap: wrap; }
+
+.search-guide{max-width:1120px;margin:48px auto;padding:32px 24px;border-top:1px solid #d6ddd4}.search-guide h2{font-size:26px;line-height:1.4}.search-guide p{line-height:1.8;max-width:850px}.search-guide a{display:inline-block;padding:12px 0;color:inherit}

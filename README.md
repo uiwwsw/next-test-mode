@@ -182,3 +182,8 @@ npm run build:demo     # Vercel production build
 ```
 
 A GitHub Release from a verified main tag triggers CI and npm publishing with provenance. Stable releases use `latest`. Version 1.0 retains the 0.7 public APIs. [Release process](./docs/releasing.md) · [Architecture](./docs/architecture.md) · [Changelog](./CHANGELOG.md).
+
+
+## Search discovery / 검색 노출
+
+The Korean and English demo pages have localized titles and descriptions, reciprocal hreflang, canonical URLs, structured data, robots.txt and sitemap.xml. Search content describes actual fetch mocking, response patching and session-scoped Next.js rendering previews. API routes and test responses are not public search documents. See [SEO verification](docs/SEO.md).

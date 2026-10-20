@@ -26,13 +26,17 @@ export default function SiteLayout({ children, locale = "ko" }) {
             <a href="https://github.com/uiwwsw/next-test-mode">GitHub ↗</a>
           </nav>
         </header>
-        <main>{children}</main>
+        <main>{children}<section className="search-guide" aria-labelledby="search-guide-title">
+          <h2 id="search-guide-title">{locale === "en" ? "Next.js API mocking and frontend QA" : "Next.js API 모킹과 프론트엔드 QA"}</h2>
+          <p>{locale === "en" ? "Next Test Mode is a fetch mocking and response-patching tool for Next.js development. Reproduce loading, empty, error and custom data states without replacing your existing API client. Explore client rendering and session-scoped server, static and ISR previews in this demo." : "넥스트 테스트모드는 Next.js 개발 중 fetch 응답을 mock·patch하는 테스트 도구입니다. 기존 API 클라이언트를 유지하며 로딩·빈 목록·오류·원하는 데이터 상태를 재현합니다. 데모에서 클라이언트 렌더링과 세션별 서버·정적·ISR 미리보기를 확인하세요."}</p>
+          <a href={`https://github.com/uiwwsw/next-test-mode/blob/main/${locale === 'en' ? 'README.md' : 'README.ko.md'}`}>{locale === "en" ? "Installation and supported rendering modes ↗" : "설치와 렌더링 지원 범위 ↗"}</a>
+        </section></main>
         <footer className="site-footer">
           <strong>Next.js App Router · Node runtime</strong>
           <p>
             {locale === "en" ? "A public sample for development and QA. Test values only affect this demo session." : "이 사이트는 테스트용 공개 샘플입니다. 다른 앱의 데이터에는 영향을 주지 않습니다."}
           </p>
-          <a href="https://github.com/uiwwsw/next-test-mode/blob/main/README.md#rendering-support">
+          <a href="https://github.com/uiwwsw/next-test-mode">
             {locale === "en" ? "How it works — README ↗" : "동작 원리와 지원 범위는 README에서 ↗"}
           </a>
         </footer>
