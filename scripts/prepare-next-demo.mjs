@@ -15,3 +15,6 @@ await cp("dist", "public/playground/dist", {
 await cp("docs/assets/social-card.png", "public/social-card.png");
 
 await cp("docs/verification", "public", { recursive: true });
+
+// Demo fonts are source assets; public/ is generated and ignored.
+await cp("docs/assets/fonts", "public/fonts", { recursive: true });
