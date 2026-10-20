@@ -18,3 +18,7 @@ await cp("docs/verification", "public", { recursive: true });
 
 // Demo fonts are source assets; public/ is generated and ignored.
 await cp("docs/assets/fonts", "public/fonts", { recursive: true });
+
+for (const asset of ['favicon.svg', 'favicon-96.png', 'apple-touch-icon.png']) {
+  await cp(`docs/assets/${asset}`, `public/${asset}`);
+}

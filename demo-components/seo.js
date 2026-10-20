@@ -14,6 +14,13 @@ export function pageMetadata(locale = 'ko', path = '') {
   const url = `${siteUrl}${en ? '/en' : ''}${path}`;
   return {
     metadataBase: new URL(siteUrl), title, description,
+    icons: {
+      icon: [
+        { url: '/favicon-96.png', type: 'image/png', sizes: '96x96' },
+        { url: '/favicon.svg', type: 'image/svg+xml', sizes: 'any' },
+      ],
+      apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    },
     verification: { other: { 'naver-site-verification': 'c2c4f0c55ff6a540df8b6d5ed9f07dc657a581b9' } },
     keywords: ['Next Test Mode', '테스트모드', '넥스트 테스트모드', 'Next.js 테스트', 'API 모킹', 'fetch 응답 변경', '프론트엔드 QA', 'Next.js API mocking', 'fetch mock', 'API response patching', 'SSR testing', 'SSG preview', 'Draft Mode', 'frontend testing tools'],
     alternates: { canonical: url, languages: { ko: `${siteUrl}${path}`, en: `${siteUrl}/en${path}`, 'x-default': `${siteUrl}/en${path}` } },
