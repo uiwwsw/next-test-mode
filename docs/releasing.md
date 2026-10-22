@@ -47,7 +47,4 @@ npm [Trusted publishing](https://docs.npmjs.com/trusted-publishers/)을 설정�
 
 README.md는 영어, README.ko.md는 한국어이며 모두 npm 패키지에 포함됩니다. 공유 이미지는 커밋된 `docs/assets/social-card.png`에서 배포 시 복사합니다. `npm run docs:assets`로 촬영 후 이미지도 함께 커밋하세요. Google Search Console의 sitemap 제출과 색인 현황은 사이트 소유자 계정에서 별도로 확인할 수 있습니다.
 
-워크스페이스에서는 `devctl doctor next-test-mode`, `devctl deploy next-test-mode`로 계획을 확인한 뒤 `devctl deploy next-test-mode --execute`로 연결된 기존 Vercel 프로젝트에 배포합니다. 공개 URL healthcheck가 모두 통과해야 완료입니다.
-
-
 배포 스크립트 `scripts/deploy.mjs`는 완료된 Vercel production 배포 URL에 `next-test-mode.vercel.app` 별칭을 연결합니다. 이전 `test-mode-tau.vercel.app` 별칭도 연결하되, Vercel의 호스트 조건부 308 redirect로 새 도메인의 같은 경로·쿼리로 영구 이동합니다. 도메인을 바꿀 때는 문서·package homepage·SEO 기준 주소·샘플 API·healthcheck·이 별칭 연결을 함께 갱신하세요.
