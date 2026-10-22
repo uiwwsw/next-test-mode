@@ -9,7 +9,7 @@
 </p>
 <p align="center">
   <a href="https://www.npmjs.com/package/@uiwwsw/next-test-mode"><img src="https://img.shields.io/npm/v/@uiwwsw/next-test-mode?style=flat-square&amp;color=173c36" alt="npm version" /></a>
-  <a href="https://github.com/uiwwsw/next-test-mode/actions/workflows/ci.yml"><img src="https://github.com/uiwwsw/next-test-mode/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/uiwwsw/next-test-mode/actions/workflows/ci.yml"><img src="https://github.com/uiwwsw/next-test-mode/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI on main" /></a>
   <img src="https://img.shields.io/badge/Next.js-App_Router-173c36?style=flat-square" alt="Next.js App Router" />
   <a href="https://github.com/uiwwsw/next-test-mode/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-62796f?style=flat-square" alt="MIT license" /></a>
 </p>
