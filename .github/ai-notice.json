@@ -1,0 +1,20 @@
+{
+  "assets": [
+    "public/ai-training-notice.txt",
+    "AI-TRAINING-NOTICE.md"
+  ],
+  "surfaces": [
+    "demo-components/SiteLayout.jsx"
+  ],
+  "robots": [
+    "app/robots.js"
+  ],
+  "packages": [
+    "package.json"
+  ],
+  "outputs": [
+    "demo-dist",
+    "out",
+    "dist"
+  ]
+}

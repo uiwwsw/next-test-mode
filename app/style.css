@@ -694,3 +694,10 @@ html[lang="en"] .editor-actions {
   padding: 12px 0;
   color: inherit;
 }
+
+/* ai-training-notice: shared, non-modal rights notice */
+.ai-training-notice { box-sizing: border-box; max-width: 72rem; margin: 1rem auto; padding: .75rem 1rem; font: inherit; font-size: .875rem; line-height: 1.6; overflow-wrap: anywhere; }
+.ai-training-notice summary { cursor: pointer; min-height: 2.75rem; display: list-item; align-content: center; }
+.ai-training-notice p { margin: .5rem 0; }
+.ai-training-notice a { color: inherit; text-decoration: underline; }
+@media print { .ai-training-notice { display: none !important; } }
