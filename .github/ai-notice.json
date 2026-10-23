@@ -16,5 +16,6 @@
     "demo-dist",
     "out",
     "dist"
-  ]
+  ],
+  "uiPolicy": "source-only"
 }
