@@ -1,3 +1,4 @@
+import UsageAnalytics from "./UsageAnalytics.jsx";
 import packageInfo from "../package.json";
 import { siteUrl } from "./seo.js";
 export default function SiteLayout({ children, locale = "ko" }) {
@@ -87,6 +88,7 @@ export default function SiteLayout({ children, locale = "ko" }) {
           </a>
         </footer>
 
+      <UsageAnalytics />
       </body>
     </html>
   );

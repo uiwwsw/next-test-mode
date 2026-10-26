@@ -22,3 +22,9 @@ await cp("docs/assets/fonts", "public/fonts", { recursive: true });
 for (const asset of ['favicon.svg', 'favicon-96.png', 'apple-touch-icon.png']) {
   await cp(`docs/assets/${asset}`, `public/${asset}`);
 }
+
+for (const asset of ['usage-analytics.js','usage-analytics.css']) await cp(`demo-components/analytics/${asset}`,`public/${asset}`);
+const {readFile,writeFile}=await import('node:fs/promises');
+const {usageTag}=await import('../demo-components/analytics/config.mjs');
+const playground=await readFile('public/playground/index.html','utf8');
+await writeFile('public/playground/index.html',playground.replace('</head>',()=>usageTag()+'</head>'));
