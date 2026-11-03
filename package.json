@@ -16,8 +16,7 @@
     "CHANGELOG.md",
     "LICENSE",
     "README.md",
-    "README.ko.md",
-    "AI-TRAINING-NOTICE.md"
+    "README.ko.md"
   ],
   "exports": {
     ".": {
@@ -60,7 +59,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "npm run clean && tsc -p tsconfig.json && node .github/scripts/apply-ai-notice.mjs",
+    "build": "npm run clean && tsc -p tsconfig.json",
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && node --test tests/*.test.mjs",
@@ -76,7 +75,7 @@
     "build:demo": "npm run build && node scripts/prepare-next-demo.mjs && next build",
     "dev:ssr": "npm run build && node examples/server/server.mjs",
     "test:next": "npm run build && node scripts/check-next.mjs",
-    "build:playground": "npm run build && node scripts/build-demo.mjs && node .github/scripts/apply-ai-notice.mjs",
+    "build:playground": "npm run build && node scripts/build-demo.mjs",
     "dev:demo": "npm run build && node scripts/prepare-next-demo.mjs && next dev",
     "test:demo": "npm run build:demo && playwright test --config playwright.demo.config.mjs"
   },
