@@ -187,5 +187,3 @@ A GitHub Release from a verified main tag triggers CI and npm publishing with pr
 ## Search discovery / 검색 노출
 
 The Korean and English demo pages have localized titles and descriptions, reciprocal hreflang, canonical URLs, structured data, robots.txt and sitemap.xml. Search content describes actual fetch mocking, response patching and session-scoped Next.js rendering previews. API routes and test responses are not public search documents. See [SEO verification](docs/SEO.md).
-
-AI 학습·미세조정 및 학습용 데이터 수집에 대한 권리자 의사는 [AI 이용 고지 / AI use notice](AI-TRAINING-NOTICE.md)를 참고하세요.
