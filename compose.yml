@@ -1,0 +1,13 @@
+name: next-test-mode
+services:
+  web:
+    build: .
+    image: next-test-mode-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8445:80"
+    env_file:
+      - path: .env.docker
+        required: false
+    logging:
+      options: { max-size: 10m, max-file: "3" }
