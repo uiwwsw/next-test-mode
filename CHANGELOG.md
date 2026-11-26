@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 — 2026-11-26
+
+- README (English and Korean) leads with testing real Next.js pages against any API response, adds how it differs from MSW, Playwright, Requestly and Draft Mode alone, who it fits, and planned work. No code changes.
+
 ## 1.0.2 — 2026-10-19
 
 - Move the public demo, localized SEO metadata, sample API, package homepage, documentation and deployment health checks to https://next-test-mode.vercel.app.

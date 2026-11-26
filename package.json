@@ -1,7 +1,7 @@
 {
   "name": "@uiwwsw/next-test-mode",
-  "version": "1.0.2",
-  "description": "Test fetch data and page states from the console, including session-scoped previews of server-rendered and static Next.js pages.",
+  "version": "1.0.3",
+  "description": "Test real Next.js pages with any API response: change fetch data from DevTools and preview the actual server-rendered page, SSG and ISR included, in your own session. Your app code stays untouched.",
   "type": "module",
   "packageManager": "npm@11.16.0",
   "license": "MIT",
