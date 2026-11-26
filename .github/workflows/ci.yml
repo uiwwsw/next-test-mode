@@ -1,9 +1,10 @@
 name: CI
 
 on:
-  pull_request:
-  push:
-    branches: [main]
+  # Not on every commit: run by hand when needed, plus once a week.
+  workflow_dispatch:
+  schedule:
+    - cron: '59 1 * * 1'
   workflow_call:
     inputs:
       ref:
