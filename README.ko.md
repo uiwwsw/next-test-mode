@@ -4,8 +4,8 @@
   <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.2/docs/assets/hero.png" width="100%" alt="Next Test Mode — 콘솔 한 줄로 서버 데이터까지 테스트." />
 </p>
 <p align="center">
-  <strong>콘솔 한 줄로. 서버 데이터까지 테스트.</strong><br />
-  One console command. Test server data, too.
+  <strong>어떤 API 응답으로든 실제 Next.js 페이지를 확인하세요.</strong><br />
+  데브툴에서 API 데이터를 바꾸고, 서버가 그린 실제 화면을 보고, 앱 코드는 그대로 둡니다.
 </p>
 <p align="center">
   <a href="https://www.npmjs.com/package/@uiwwsw/next-test-mode"><img src="https://img.shields.io/npm/v/@uiwwsw/next-test-mode?style=flat-square&amp;color=173c36" alt="npm version" /></a>
@@ -47,6 +47,23 @@ test.patch('/api/cart', { total: 9.99 });
 // Draft Mode 연결 → 자동 새로고침 → 바뀐 데이터로 화면 확인
 test.clear();
 ```
+
+## 다른 도구와 다른 점
+
+이미 쓰고 있는 도구를 대체하지 않고 함께 씁니다. 더하는 것은 작업 방식입니다. 콘솔에서 응답을 바꾸고, 서버 HTML까지 포함한 실제 페이지를 내 세션에서 바로 확인합니다.
+
+- **데브툴에서 서버 렌더링 화면까지.** [MSW](https://github.com/mswjs/msw)는 코드로 작성한 핸들러로 브라우저와 Node 요청을 가로챕니다. 이 도구는 핸들러를 먼저 쓰지 않고 콘솔에서 실행 중에 데이터를 바꾸며, 그 값이 서버 fetch까지 전달돼 새 HTML이 그려집니다.
+- **SSG·ISR 페이지도, 다른 방문자에게 영향 없이.** 콘솔 변경은 내 세션에만 [Next.js Draft Mode](https://nextjs.org/docs/app/guides/draft-mode) 미리보기를 열어, 정적·재검증 페이지를 테스트 데이터로 그리고 공용 정적 결과는 그대로 둡니다.
+- **상태 하나 보려고 테스트 코드를 쓰지 않습니다.** [Playwright](https://playwright.dev/docs/network)는 테스트 스크립트에서 브라우저 네트워크를 바꾸고, [Requestly](https://requestly.com)는 브라우저 트래픽을 고칩니다. 둘 다 브라우저가 보내는 요청에 작용하는데, Next.js의 서버 fetch는 그보다 먼저 렌더링됩니다. 이 도구는 테스트 스크립트도 브라우저 확장도 필요 없습니다.
+- **한 번 해 보는 실험에서 재사용 시나리오까지.** `test.mock()`·`test.patch()`로 바로 시험하고, 반복하는 경우는 브라우저와 서버가 함께 쓰는 `test-mode/catalog.ts`에 남기며, 여러 API에 걸친 시나리오를 `test.story()`로 한 번에 켭니다.
+- **지금 켜진 것을 볼 수 있습니다.** `test.active()`, `test.overrides()`, `test.search()`가 현재 덮어쓴 응답과 저장된 시나리오를 보여 주고, `test.cache.status()`가 미리보기 상태를 알려 줍니다.
+- **운영 빌드는 깨끗합니다.** 생성된 연결 코드는 일반 운영 번들에서 테스트 카탈로그를 빼고, CI가 실제 클라이언트·서버 번들을 검사합니다.
+
+## 이런 팀에 맞습니다
+
+- 서버 렌더링 화면에서 빈 목록, 특이한 가격, 품절, 500 오류를 재현해야 하는 Next.js App Router 팀
+- 백엔드가 데이터를 만들어 주기 전에 화면 상태부터 확인해야 하는 프론트엔드 개발자
+- 개발·QA 배포에서 화면 상태를 직접 확인하는 QA. 자동 검증은 Playwright·Vitest와 함께 씁니다.
 
 ## Quick start
 
@@ -178,6 +195,14 @@ export const catalog = {
 - Draft 연결 실패는 Console 오류와 `next-test-mode:error` 이벤트로 알리며 자동 새로고침하지 않습니다. `ready` / `sync()`로 성공 여부를 기다릴 수 있습니다. [클라이언트 API](https://github.com/uiwwsw/next-test-mode/blob/main/docs/server-rendering.md#클라이언트-연결-상태).
 - 테스트 쿠키는 로그인 자격이 아닙니다. QA 환경의 접근 권한은 앱이 관리합니다. 들어온 인증 쿠키를 외부 API에 자동 전달하지 않습니다.
 - 이 패키지는 **화면 상태를 재현하는 도구**입니다. 자동 assertion·합격 판정은 Playwright나 Vitest가 담당합니다.
+
+## 진행 예정
+
+- **Next.js 지원 범위 확대:** Next.js 15 지원을 검토하고, 캐시 범위 안에서 쿠키를 읽는 연결부를 버전별로 확인하는 어댑터 뒤로 옮깁니다.
+- **버전별 회귀 테스트:** 지원하는 Next.js 버전마다 운영 빌드 테스트를 자동으로 돌립니다.
+- **더 큰 테스트 데이터:** 3,500바이트 쿠키 한도를 넘는 데이터를 파일 시나리오 없이 전달합니다.
+- **시나리오 내보내기·가져오기:** 콘솔에서 만든 실험을 팀원과 공유합니다.
+- **Playwright·CI 연동:** 자동 테스트에서 저장된 시나리오를 골라 켜고, 그 상태로 페이지를 검사합니다.
 
 ## Framework-independent APIs
 

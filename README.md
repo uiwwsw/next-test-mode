@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/uiwwsw/next-test-mode/v1.0.2/docs/assets/hero.png" width="100%" alt="Next Test Mode — One console. Server data, too." />
 </p>
-<p align="center"><strong>Test Next.js API data and page states from the console.</strong><br />Keep your fetch calls. Try the data you need. Check the real page.</p>
+<p align="center"><strong>Test real Next.js pages with any API response.</strong><br />Change API data from DevTools. Preview the actual server-rendered page. Keep your application code untouched.</p>
 <p align="center">
   <a href="https://www.npmjs.com/package/@uiwwsw/next-test-mode"><img src="https://img.shields.io/npm/v/@uiwwsw/next-test-mode?style=flat-square&amp;color=173c36" alt="npm version" /></a>
   <a href="https://github.com/uiwwsw/next-test-mode/actions/workflows/ci.yml"><img src="https://github.com/uiwwsw/next-test-mode/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI on main" /></a>
@@ -38,6 +38,23 @@ test.patch('/api/cart', { total: 9.99 });
 // Draft Mode connects automatically and the page refreshes.
 test.clear();
 ```
+
+## How it differs
+
+Next Test Mode works alongside the tools you may already use. What it adds is the workflow: change a response in the console and look at the real page, server HTML included, in your own session.
+
+- **Server-rendered pages from DevTools.** [MSW](https://github.com/mswjs/msw) mocks requests in the browser and in Node, from handlers you write in code. Here you change data at runtime from the console, and the change reaches server fetch calls and renders new HTML without writing a handler first.
+- **SSG and ISR pages too, without touching other visitors.** Console changes open a [Next.js Draft Mode](https://nextjs.org/docs/app/guides/draft-mode) preview for your session only, so static and revalidated pages render with your test data while the shared static output stays as it is.
+- **No test code to try a state.** [Playwright](https://playwright.dev/docs/network) mocks the browser's network from test scripts, and [Requestly](https://requestly.com) rewrites browser traffic. Both act on what the browser requests; server-side fetch calls in Next.js render before that. Next Test Mode needs neither a test script nor a browser extension.
+- **One-off experiments, then reusable scenarios.** Try `test.mock()` or `test.patch()` once, then keep the cases you repeat in `test-mode/catalog.ts`, shared by browser and server, and switch a whole multi-API scenario with `test.story()`.
+- **See what is active.** `test.active()`, `test.overrides()` and `test.search()` list the current overrides and find saved cases; `test.cache.status()` shows the preview state.
+- **Production builds stay clean.** The generated integration leaves the test catalog out of ordinary production bundles, and CI checks the real client and server bundles.
+
+## Made for
+
+- Next.js App Router teams reproducing empty lists, edge-case prices, sold-out items or 500 errors on server-rendered pages
+- Frontend developers who need a UI state before the backend can produce it
+- QA reviewing page states by hand on a development or QA deployment, alongside automated Playwright or Vitest suites
 
 ## Quick start
 
@@ -153,6 +170,14 @@ Running `init` again preserves the edited test folder. `init --migrate` migrates
 - Draft connection failures emit a console error and `next-test-mode:error`; they do not trigger a reload. Await `ready` or `sync()` to verify success. [Client API](./docs/server-rendering.md#클라이언트-연결-상태).
 - Test cookies are not authentication. The application controls QA access. Incoming authentication cookies are not automatically forwarded to external APIs.
 - This tool reproduces page states. Use Playwright or Vitest for automated assertions and pass/fail results.
+
+## Planned
+
+- **Wider Next.js support:** evaluating Next.js 15, and moving the cookie bridge for cached scopes behind a version-checked adapter.
+- **Per-version regression runs** of the production build tests against each supported Next.js release.
+- **Larger test data** than the 3,500-byte cookie budget, without a file-defined scenario.
+- **Scenario import and export** to share console experiments with teammates.
+- **Playwright and CI hooks** to select a saved scenario in automated runs and check a page against it.
 
 ## Framework-independent APIs
 
